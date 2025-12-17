@@ -1,22 +1,26 @@
 import { useEffect, useRef, useState } from 'react'
 import cloudImg from './assets/Nuage.png'
 import backgroundImg from './assets/monde1/background.png'
-import case1Disabled from './assets/monde1/Case1-disable.png'
-import case1Focus from './assets/monde1/Case1-focus.png'
-import case1Normal from './assets/monde1/Case1-normal.png'
-import case2Disabled from './assets/monde1/Case2-disable.png'
-import case2Focus from './assets/monde1/Case2-focus.png'
-import case2Normal from './assets/monde1/Case2-normal.png'
-import case3Disabled from './assets/monde1/Case3-disable.png'
-import case3Focus from './assets/monde1/Case3-focus.png'
-import case3Normal from './assets/monde1/Case3-normal.png'
-import case4Disabled from './assets/monde1/Case4-disable.png'
-import case4Focus from './assets/monde1/Case4-focus.png'
-import case4Normal from './assets/monde1/Case4-normal.png'
+import case1Disabled from './assets/monde1/normalized/Case1-disable.png'
+import case1Focus from './assets/monde1/normalized/Case1-focus.png'
+import case1Normal from './assets/monde1/normalized/Case1-normal.png'
+import case2Disabled from './assets/monde1/normalized/Case2-disable.png'
+import case2Focus from './assets/monde1/normalized/Case2-focus.png'
+import case2Normal from './assets/monde1/normalized/Case2-normal.png'
+import case3Disabled from './assets/monde1/normalized/Case3-disable.png'
+import case3Focus from './assets/monde1/normalized/Case3-focus.png'
+import case3Normal from './assets/monde1/normalized/Case3-normal.png'
+import case4Disabled from './assets/monde1/normalized/Case4-disable.png'
+import case4Focus from './assets/monde1/normalized/Case4-focus.png'
+import case4Normal from './assets/monde1/normalized/Case4-normal.png'
+import {
+  currentDayStore,
+  hydrateCurrentDayFromQuery,
+  resolveDayState,
+} from './stores/dayStore'
+import { useNanoStore } from './stores/useNanoStore'
 import './App.css'
 
-const TOTAL_DAYS = 4
-const DEFAULT_DAY = 2
 const BOARD_WIDTH = 440
 const BOARD_HEIGHT = 956
 
@@ -63,28 +67,16 @@ const slots = [
     type: 'day',
     number: 2,
     x: 325,
-    y: 675,
+    y: 730,
   },
   {
     id: 'day-1',
     type: 'day',
     number: 1,
     x: 265,
-    y: 880,
+    y: 920,
   },
 ]
-
-const clampDay = (value) => Math.min(TOTAL_DAYS, Math.max(1, value))
-
-const getCurrentDay = () => {
-  if (typeof window === 'undefined') return DEFAULT_DAY
-  const params = new URLSearchParams(window.location.search)
-  const fromQuery = Number(params.get('day'))
-  if (Number.isFinite(fromQuery) && fromQuery > 0) {
-    return clampDay(fromQuery)
-  }
-  return DEFAULT_DAY
-}
 
 function App() {
   const scrollRef = useRef(null)
@@ -92,12 +84,16 @@ function App() {
   const bounceTimer = useRef(null)
   const touchStartY = useRef(0)
   const isTouching = useRef(false)
-  const currentDay = getCurrentDay()
+  const currentDay = useNanoStore(currentDayStore)
   const [layout, setLayout] = useState({
     scale: 1,
     offsetX: 0,
     offsetY: 0,
   })
+
+  useEffect(() => {
+    hydrateCurrentDayFromQuery()
+  }, [])
 
   useEffect(() => {
     const container = scrollRef.current
@@ -205,12 +201,6 @@ function App() {
     }
   }, [])
 
-  const resolveState = (day) => {
-    if (day < currentDay) return 'disabled'
-    if (day === currentDay) return 'focus'
-    return 'normal'
-  }
-
   return (
     <main className="screen">
       <div className="ambient" aria-hidden="true" />
@@ -223,7 +213,7 @@ function App() {
             style={{ backgroundImage: `url(${backgroundImg})` }}
           >
             {slots.map((slot) => {
-              const state = resolveState(slot.number)
+              const state = resolveDayState(slot.number, currentDay)
               const left = layout.offsetX + slot.x * layout.scale
               const top = layout.offsetY + slot.y * layout.scale
               return (

@@ -104,7 +104,7 @@
 .slot-day {
   width: 120px;
   height: 120px;
-  --slot-scale: 1;
+  --slot-scale: 3.5;
 }
 
 .slot-focus {
@@ -116,5 +116,5 @@
 }
 
 .slot-disabled {
-  --slot-scale: 1.4;
+  --slot-scale: 3.5;
 }
