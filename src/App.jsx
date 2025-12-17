@@ -27,7 +27,7 @@ const APPEND_SLOTS = 10
 const HERO_EVERY = 7
 const HERO_OFFSET = 3
 const SCROLL_PAD_BOTTOM = 140
-const BOUNCE_OFFSET = 60
+const TOP_BOUNCE_REST = 80
 const BOUNCE_SETTLE_MS = 130
 
 const buildSlots = (startIndex, count) =>
@@ -79,14 +79,24 @@ function App() {
   const appendLock = useRef(false)
   const initialScrollSet = useRef(false)
   const scrollEndTimer = useRef(null)
+  const lastScrollTop = useRef(0)
+  const lastDirection = useRef('down')
 
   useEffect(() => {
     const el = scrollRef.current
     if (!el) return
 
     const onScroll = () => {
+      const currentTop = el.scrollTop
+      if (currentTop < lastScrollTop.current) {
+        lastDirection.current = 'up'
+      } else if (currentTop > lastScrollTop.current) {
+        lastDirection.current = 'down'
+      }
+      lastScrollTop.current = currentTop
+
       if (!appendLock.current) {
-        const nearTop = el.scrollTop <= 220
+        const nearTop = currentTop <= 220
         if (nearTop) {
           appendLock.current = true
           setSlots((prev) => [...prev, ...buildSlots(prev.length, APPEND_SLOTS)])
@@ -100,10 +110,8 @@ function App() {
         clearTimeout(scrollEndTimer.current)
       }
       scrollEndTimer.current = setTimeout(() => {
-        const maxScrollTop = el.scrollHeight - el.clientHeight
-        const restScrollTop = Math.max(0, maxScrollTop - BOUNCE_OFFSET)
-        if (el.scrollTop > restScrollTop) {
-          el.scrollTo({ top: restScrollTop, behavior: 'smooth' })
+        if (lastDirection.current === 'up' && el.scrollTop < TOP_BOUNCE_REST) {
+          el.scrollTo({ top: TOP_BOUNCE_REST, behavior: 'smooth' })
         }
       }, BOUNCE_SETTLE_MS)
     }
@@ -120,9 +128,8 @@ function App() {
   useLayoutEffect(() => {
     const el = scrollRef.current
     if (!el || initialScrollSet.current) return
-    const maxScrollTop = el.scrollHeight - el.clientHeight
-    const restScrollTop = Math.max(0, maxScrollTop - BOUNCE_OFFSET)
-    el.scrollTop = restScrollTop
+    el.scrollTop = Math.max(0, el.scrollHeight - el.clientHeight)
+    lastScrollTop.current = el.scrollTop
     initialScrollSet.current = true
   }, [slots.length])
 
