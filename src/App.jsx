@@ -1,51 +1,50 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import diceImg from './assets/Dice Cubes.png'
+import { useEffect, useRef } from 'react'
 import cloudImg from './assets/Nuage.png'
 import caseBleu from './assets/Case/Case-bleu.png'
 import caseGrise from './assets/Case/Case-grise.png'
 import caseJaune from './assets/Case/Case-jaune.png'
-import caseMauve from './assets/Case/Case-mauve.png'
 import caseRose from './assets/Case/Case-rose.png'
-import caseRouge from './assets/Case/Case-rouge.png'
-import caseViolette from './assets/Case/Case-violette.png'
 import './App.css'
-
-const caseImages = [
-  caseBleu,
-  caseRouge,
-  caseJaune,
-  caseRose,
-  caseViolette,
-  caseMauve,
-  caseGrise,
-]
 
 const SLOT_SPACING = 160
 const TOP_OFFSET = 140
-const INITIAL_SLOTS = 14
-const APPEND_SLOTS = 10
-const HERO_EVERY = 7
-const HERO_OFFSET = 3
-const SCROLL_PAD_BOTTOM = 140
-const TOP_BOUNCE_REST = 80
-const BOUNCE_SETTLE_MS = 130
 
-const buildSlots = (startIndex, count) =>
-  Array.from({ length: count }, (_, i) => {
-    const slotIndex = startIndex + i
-    const isHero = slotIndex % HERO_EVERY === HERO_OFFSET
-    return {
-      id: `slot-${slotIndex}`,
-      slotIndex,
-      type: isHero ? 'hero' : 'number',
-      image: caseImages[slotIndex % caseImages.length],
-    }
-  })
-
-const heroCountBefore = (index) => {
-  if (index < HERO_OFFSET) return 0
-  return Math.floor((index - HERO_OFFSET) / HERO_EVERY) + 1
-}
+const fixedSlots = [
+  {
+    id: 'slot-4',
+    type: 'number',
+    number: 4,
+    image: caseRose,
+    left: '58%',
+  },
+  {
+    id: 'slot-3',
+    type: 'number',
+    number: 3,
+    image: caseBleu,
+    left: '30%',
+  },
+  {
+    id: 'slot-hero',
+    type: 'hero',
+    left: '58%',
+  },
+  {
+    id: 'slot-2',
+    type: 'number',
+    number: 2,
+    image: caseJaune,
+    isCurrent: true,
+    left: '56%',
+  },
+  {
+    id: 'slot-1',
+    type: 'number',
+    number: 1,
+    image: caseGrise,
+    left: '50%',
+  },
+]
 
 const buildPath = (height) => {
   const startX = 150
@@ -74,79 +73,97 @@ const buildPath = (height) => {
 }
 
 function App() {
-  const [slots, setSlots] = useState(() => buildSlots(0, INITIAL_SLOTS))
+  const slots = fixedSlots
   const scrollRef = useRef(null)
-  const appendLock = useRef(false)
-  const initialScrollSet = useRef(false)
-  const scrollEndTimer = useRef(null)
-  const lastScrollTop = useRef(0)
-  const lastDirection = useRef('down')
+  const trackRef = useRef(null)
+  const bounceTimer = useRef(null)
+  const touchStartY = useRef(0)
+  const isTouching = useRef(false)
 
   useEffect(() => {
-    const el = scrollRef.current
-    if (!el) return
+    const container = scrollRef.current
+    const track = trackRef.current
+    if (!container || !track) return
 
-    const onScroll = () => {
-      const currentTop = el.scrollTop
-      if (currentTop < lastScrollTop.current) {
-        lastDirection.current = 'up'
-      } else if (currentTop > lastScrollTop.current) {
-        lastDirection.current = 'down'
+    const setBounce = (value, immediate) => {
+      if (immediate) {
+        track.classList.add('is-dragging')
+      } else {
+        track.classList.remove('is-dragging')
       }
-      lastScrollTop.current = currentTop
-
-      if (!appendLock.current) {
-        const nearTop = currentTop <= 220
-        if (nearTop) {
-          appendLock.current = true
-          setSlots((prev) => [...prev, ...buildSlots(prev.length, APPEND_SLOTS)])
-          requestAnimationFrame(() => {
-            appendLock.current = false
-          })
-        }
-      }
-
-      if (scrollEndTimer.current) {
-        clearTimeout(scrollEndTimer.current)
-      }
-      scrollEndTimer.current = setTimeout(() => {
-        if (lastDirection.current === 'up' && el.scrollTop < TOP_BOUNCE_REST) {
-          el.scrollTo({ top: TOP_BOUNCE_REST, behavior: 'smooth' })
-        }
-      }, BOUNCE_SETTLE_MS)
+      track.style.setProperty('--bounce', `${value}px`)
     }
 
-    el.addEventListener('scroll', onScroll)
+    const settleBounce = () => {
+      if (bounceTimer.current) {
+        clearTimeout(bounceTimer.current)
+      }
+      bounceTimer.current = setTimeout(() => {
+        setBounce(0, false)
+      }, 120)
+    }
+
+    const onWheel = (event) => {
+      if (event.deltaY >= 0) return
+      event.preventDefault()
+      const amount = Math.min(32, Math.max(0, -event.deltaY * 0.25))
+      setBounce(amount, false)
+      settleBounce()
+    }
+
+    const onTouchStart = (event) => {
+      if (event.touches.length !== 1) return
+      isTouching.current = true
+      touchStartY.current = event.touches[0].clientY
+      setBounce(0, true)
+    }
+
+    const onTouchMove = (event) => {
+      if (!isTouching.current) return
+      const delta = event.touches[0].clientY - touchStartY.current
+      if (delta <= 0) return
+      event.preventDefault()
+      const amount = Math.min(36, delta * 0.35)
+      setBounce(amount, true)
+    }
+
+    const onTouchEnd = () => {
+      if (!isTouching.current) return
+      isTouching.current = false
+      setBounce(0, false)
+    }
+
+    container.addEventListener('wheel', onWheel, { passive: false })
+    container.addEventListener('touchstart', onTouchStart, { passive: true })
+    container.addEventListener('touchmove', onTouchMove, { passive: false })
+    container.addEventListener('touchend', onTouchEnd)
+    container.addEventListener('touchcancel', onTouchEnd)
+
     return () => {
-      el.removeEventListener('scroll', onScroll)
-      if (scrollEndTimer.current) {
-        clearTimeout(scrollEndTimer.current)
+      container.removeEventListener('wheel', onWheel)
+      container.removeEventListener('touchstart', onTouchStart)
+      container.removeEventListener('touchmove', onTouchMove)
+      container.removeEventListener('touchend', onTouchEnd)
+      container.removeEventListener('touchcancel', onTouchEnd)
+      if (bounceTimer.current) {
+        clearTimeout(bounceTimer.current)
       }
     }
   }, [])
 
-  useLayoutEffect(() => {
-    const el = scrollRef.current
-    if (!el || initialScrollSet.current) return
-    el.scrollTop = Math.max(0, el.scrollHeight - el.clientHeight)
-    lastScrollTop.current = el.scrollTop
-    initialScrollSet.current = true
-  }, [slots.length])
-
   const trackHeight = TOP_OFFSET + slots.length * SLOT_SPACING
-  const pathData = useMemo(() => buildPath(trackHeight), [trackHeight])
-  const orderedSlots = useMemo(() => [...slots].reverse(), [slots])
+  const pathData = buildPath(trackHeight)
 
   return (
     <main className="screen">
       <div className="ambient" aria-hidden="true" />
       <img className="cloud" src={cloudImg} alt="" aria-hidden="true" />
-      <div
-        className="scroll"
-        ref={scrollRef}
-        style={{ '--scroll-pad': `${SCROLL_PAD_BOTTOM}px` }}
-      >
-        <div className="track" style={{ height: `${trackHeight}px` }}>
+      <div className="scroll" ref={scrollRef}>
+        <div
+          className="track"
+          ref={trackRef}
+          style={{ height: `${trackHeight}px` }}
+        >
           <svg
             className="path"
             viewBox={`0 0 260 ${trackHeight}`}
@@ -156,9 +173,9 @@ function App() {
             <path d={pathData} />
           </svg>
 
-          {orderedSlots.map((slot, index) => {
+          {slots.map((slot, index) => {
             const top = TOP_OFFSET + index * SLOT_SPACING
-            const left = index % 2 === 0 ? '58%' : '30%'
+            const left = slot.left ?? (index % 2 === 0 ? '58%' : '30%')
 
             if (slot.type === 'hero') {
               return (
@@ -179,30 +196,20 @@ function App() {
               )
             }
 
-            const number = slot.slotIndex + 1 - heroCountBefore(slot.slotIndex)
-            const isCurrent = number % 8 === 2
-
             return (
               <div
                 key={slot.id}
-                className={`step step-number${isCurrent ? ' is-current' : ''}`}
+                className={`step step-number${slot.isCurrent ? ' is-current' : ''}`}
                 style={{ top: `${top}px`, left }}
               >
                 <img className="step-image" src={slot.image} alt="" />
-                <span className="step-label">{number}</span>
+                <span className="step-label">{slot.number}</span>
               </div>
             )
           })}
         </div>
       </div>
 
-      <button
-        className="dice-button"
-        type="button"
-        aria-label="Lancer les des"
-      >
-        <img className="dice-image" src={diceImg} alt="" />
-      </button>
     </main>
   )
 }
