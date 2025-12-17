@@ -67,7 +67,7 @@ const slots = [
     type: 'day',
     number: 2,
     x: 325,
-    y: 730,
+    y: 715,
   },
   {
     id: 'day-1',
