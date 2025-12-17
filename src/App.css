@@ -35,6 +35,20 @@
   background: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.45), transparent 55%);
   filter: blur(16px);
   opacity: 0.6;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.cloud {
+  position: absolute;
+  top: -90px;
+  left: 50%;
+  width: 130%;
+  max-width: 560px;
+  transform: translateX(-50%);
+  z-index: 4;
+  pointer-events: none;
+  filter: drop-shadow(0 16px 22px rgba(40, 80, 78, 0.16));
 }
 
 .scroll {
@@ -43,7 +57,7 @@
   width: 100%;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding-bottom: 140px;
+  padding-bottom: var(--scroll-pad, 140px);
   z-index: 1;
   scrollbar-width: none;
 }

@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import diceImg from './assets/Dice Cubes.png'
+import cloudImg from './assets/Nuage.png'
 import caseBleu from './assets/Case/Case-bleu.png'
 import caseGrise from './assets/Case/Case-grise.png'
 import caseJaune from './assets/Case/Case-jaune.png'
@@ -25,6 +26,9 @@ const INITIAL_SLOTS = 14
 const APPEND_SLOTS = 10
 const HERO_EVERY = 7
 const HERO_OFFSET = 3
+const SCROLL_PAD_BOTTOM = 140
+const BOUNCE_OFFSET = 60
+const BOUNCE_SETTLE_MS = 130
 
 const buildSlots = (startIndex, count) =>
   Array.from({ length: count }, (_, i) => {
@@ -73,35 +77,68 @@ function App() {
   const [slots, setSlots] = useState(() => buildSlots(0, INITIAL_SLOTS))
   const scrollRef = useRef(null)
   const appendLock = useRef(false)
+  const initialScrollSet = useRef(false)
+  const scrollEndTimer = useRef(null)
 
   useEffect(() => {
     const el = scrollRef.current
     if (!el) return
 
     const onScroll = () => {
-      if (appendLock.current) return
-      const nearBottom =
-        el.scrollTop + el.clientHeight >= el.scrollHeight - 280
-      if (!nearBottom) return
+      if (!appendLock.current) {
+        const nearTop = el.scrollTop <= 220
+        if (nearTop) {
+          appendLock.current = true
+          setSlots((prev) => [...prev, ...buildSlots(prev.length, APPEND_SLOTS)])
+          requestAnimationFrame(() => {
+            appendLock.current = false
+          })
+        }
+      }
 
-      appendLock.current = true
-      setSlots((prev) => [...prev, ...buildSlots(prev.length, APPEND_SLOTS)])
-      requestAnimationFrame(() => {
-        appendLock.current = false
-      })
+      if (scrollEndTimer.current) {
+        clearTimeout(scrollEndTimer.current)
+      }
+      scrollEndTimer.current = setTimeout(() => {
+        const maxScrollTop = el.scrollHeight - el.clientHeight
+        const restScrollTop = Math.max(0, maxScrollTop - BOUNCE_OFFSET)
+        if (el.scrollTop > restScrollTop) {
+          el.scrollTo({ top: restScrollTop, behavior: 'smooth' })
+        }
+      }, BOUNCE_SETTLE_MS)
     }
 
     el.addEventListener('scroll', onScroll)
-    return () => el.removeEventListener('scroll', onScroll)
+    return () => {
+      el.removeEventListener('scroll', onScroll)
+      if (scrollEndTimer.current) {
+        clearTimeout(scrollEndTimer.current)
+      }
+    }
   }, [])
+
+  useLayoutEffect(() => {
+    const el = scrollRef.current
+    if (!el || initialScrollSet.current) return
+    const maxScrollTop = el.scrollHeight - el.clientHeight
+    const restScrollTop = Math.max(0, maxScrollTop - BOUNCE_OFFSET)
+    el.scrollTop = restScrollTop
+    initialScrollSet.current = true
+  }, [slots.length])
 
   const trackHeight = TOP_OFFSET + slots.length * SLOT_SPACING
   const pathData = useMemo(() => buildPath(trackHeight), [trackHeight])
+  const orderedSlots = useMemo(() => [...slots].reverse(), [slots])
 
   return (
     <main className="screen">
       <div className="ambient" aria-hidden="true" />
-      <div className="scroll" ref={scrollRef}>
+      <img className="cloud" src={cloudImg} alt="" aria-hidden="true" />
+      <div
+        className="scroll"
+        ref={scrollRef}
+        style={{ '--scroll-pad': `${SCROLL_PAD_BOTTOM}px` }}
+      >
         <div className="track" style={{ height: `${trackHeight}px` }}>
           <svg
             className="path"
@@ -112,7 +149,7 @@ function App() {
             <path d={pathData} />
           </svg>
 
-          {slots.map((slot, index) => {
+          {orderedSlots.map((slot, index) => {
             const top = TOP_OFFSET + index * SLOT_SPACING
             const left = index % 2 === 0 ? '58%' : '30%'
 
@@ -135,7 +172,7 @@ function App() {
               )
             }
 
-            const number = index + 1 - heroCountBefore(index)
+            const number = slot.slotIndex + 1 - heroCountBefore(slot.slotIndex)
             const isCurrent = number % 8 === 2
 
             return (
