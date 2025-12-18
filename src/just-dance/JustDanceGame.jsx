@@ -51,7 +51,12 @@ export function JustDanceGame({ referenceVideoUrl }) {
     try {
       setError("");
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "user" },
+        video: {
+          facingMode: "user",
+          width: { ideal: 640 },
+          height: { ideal: 360 },
+          frameRate: { ideal: 24, max: 24 },
+        },
         audio: true,
       });
       streamRef.current = stream;
