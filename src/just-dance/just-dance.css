@@ -3,20 +3,28 @@
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  background: #d7f0ec;
-  padding: 24px 16px 48px;
+  background: transparent;
+  padding: 12px 10px 16px;
   box-sizing: border-box;
+  display: flex;
+  align-items: center;
 }
 
 .jd-panel {
   width: 100%;
-  max-width: 900px;
-  background: url("../assets/background-quete-light.png") center/cover no-repeat;
+  max-width: 380px;
+  min-height: auto;
+  background: url("../assets/background-quete-light.png") center/100% 100% no-repeat;
   border-radius: 18px;
   border: 1px solid rgba(0, 0, 0, 0.05);
-  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.14);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
   padding: 20px;
   color: #0f2022;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+
 }
 
 .jd-title {
@@ -33,16 +41,16 @@
 
 .jd-media {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 16px;
+  grid-template-columns: 1fr;
+  gap: 12px;
 }
 
 .jd-media-block {
   background: rgba(255, 255, 255, 0.6);
   border: 1px solid rgba(0, 0, 0, 0.06);
   border-radius: 14px;
-  padding: 12px;
-  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.1);
+  padding: 10px;
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.08);
 }
 
 .jd-label {
@@ -54,14 +62,16 @@
 
 .jd-video {
   width: 100%;
+  max-height: 24vh;
   border-radius: 12px;
   background: #0d2027;
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.22);
 }
 
 .jd-video-live {
-  min-height: 180px;
+  min-height: 160px;
   object-fit: cover;
+  transform: scaleX(-1);
 }
 
 .jd-placeholder {
@@ -82,9 +92,9 @@
 
 .jd-actions {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: 1fr;
   gap: 10px;
-  margin-top: 18px;
+  margin-top: 14px;
 }
 
 .jd-error {
@@ -118,4 +128,59 @@
 
 .jd-mono {
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+}
+
+.jd-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: none;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.jd-close img {
+  width: 14px;
+  height: 14px;
+}
+
+.jd-end-screen {
+  position: fixed;
+  inset: 0;
+  background: url("../assets/monde1/danse/endScreen-danse.png") center/cover no-repeat;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 24px 16px 28px;
+  z-index: 50;
+}
+
+.jd-end-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: none;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.jd-end-close img {
+  width: 16px;
+  height: 16px;
+}
+
+.jd-end-body {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 6px;
 }

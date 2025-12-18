@@ -2,12 +2,15 @@
 import { supabase } from "../supabase/supabase";
 import SoftButton from "../button/Button";
 import "./just-dance.css";
+import closeIcon from "../assets/close.svg";
+import RewardButton from "../reward/RewardButton";
 
 const RECORD_DURATION_MS = 10000;
 const WEBHOOK_URL = "https://apizee.app.n8n.cloud/webhook/getScoreDance";
 
-export function JustDanceGame({ referenceVideoUrl }) {
-  const videoRef = useRef(null);
+export function JustDanceGame({ referenceVideoUrl, onClose }) {
+  const liveVideoRef = useRef(null);
+  const referenceVideoRef = useRef(null);
   const recorderRef = useRef(null);
   const chunksRef = useRef([]);
   const timerRef = useRef(null);
@@ -16,9 +19,10 @@ export function JustDanceGame({ referenceVideoUrl }) {
   const [status, setStatus] = useState("idle");
   const [error, setError] = useState("");
   const [recordedUrl, setRecordedUrl] = useState("");
-  const [uploadPath, setUploadPath] = useState("");
   const [score, setScore] = useState(null);
   const [scoreStatus, setScoreStatus] = useState("idle"); // idle | requesting | done
+
+  const isWinner = scoreStatus === "done" && score != null && score > 50;
 
   const clearTimer = () => {
     if (timerRef.current) {
@@ -60,13 +64,13 @@ export function JustDanceGame({ referenceVideoUrl }) {
         audio: true,
       });
       streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.play();
+      if (liveVideoRef.current) {
+        liveVideoRef.current.srcObject = stream;
+        liveVideoRef.current.play();
       }
       setStatus("ready");
     } catch (err) {
-      setError("Caméra inaccessible : " + err.message);
+      setError("Camera inaccessible : " + err.message);
       setStatus("error");
     }
   };
@@ -78,9 +82,10 @@ export function JustDanceGame({ referenceVideoUrl }) {
     }
     setError("");
     chunksRef.current = [];
-    const mimeType = MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
-      ? "video/webm;codecs=vp9"
-      : "video/webm";
+    const mimeType =
+      MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
+        ? "video/webm;codecs=vp9"
+        : "video/webm";
 
     const recorder = new MediaRecorder(streamRef.current, { mimeType });
     recorderRef.current = recorder;
@@ -91,7 +96,7 @@ export function JustDanceGame({ referenceVideoUrl }) {
       }
     };
 
-    recorder.onstop = async () => {
+    recorder.onstop = () => {
       const blob = new Blob(chunksRef.current, { type: mimeType });
       const url = URL.createObjectURL(blob);
       setRecordedUrl(url);
@@ -108,6 +113,48 @@ export function JustDanceGame({ referenceVideoUrl }) {
     }, RECORD_DURATION_MS);
   };
 
+  const extractScore = (text) => {
+    if (text == null) return null;
+
+    // Handle non-string inputs gracefully
+    if (typeof text === "number") return text;
+    if (typeof text === "object") {
+      if (typeof text.score === "number") return text.score;
+      if (Array.isArray(text)) {
+        for (const item of text) {
+          const found = extractScore(item);
+          if (found != null) return found;
+        }
+      }
+      const nestedText = text?.content?.parts?.[0]?.text;
+      if (nestedText) {
+        const nestedScore = extractScore(nestedText);
+        if (nestedScore != null) return nestedScore;
+      }
+      try {
+        text = JSON.stringify(text);
+      } catch {
+        return null;
+      }
+    }
+
+    if (typeof text !== "string") return null;
+
+    // Strip fences like ```json ... ```
+    const cleaned = text.replace(/```[a-zA-Z]*\n?([\s\S]*?)```/g, "$1");
+
+    try {
+      const parsed = JSON.parse(cleaned);
+      const parsedScore = extractScore(parsed);
+      if (parsedScore != null) return parsedScore;
+    } catch {
+      // ignore parse errors
+    }
+
+    const match = cleaned.match(/score\s*[:=]\s*([0-9]+)/i);
+    return match ? Number(match[1]) : null;
+  };
+
   const callWebhookScore = async (publicUrl) => {
     try {
       setScoreStatus("requesting");
@@ -119,10 +166,12 @@ export function JustDanceGame({ referenceVideoUrl }) {
       });
       if (!res.ok) throw new Error("Webhook non accessible");
       const text = await res.text();
-      const match = text.match(/score\s*[:=]\s*([0-9]+)/i);
-      const receivedScore = match ? Number(match[1]) : null;
+      const receivedScore = extractScore(text);
       setScore(receivedScore ?? null);
-      setScoreStatus("done");
+      setScoreStatus(receivedScore != null ? "done" : "idle");
+      if (receivedScore == null) {
+        setError("Score non parse : " + text.slice(0, 140));
+      }
     } catch (err) {
       setError("Score indisponible : " + err.message);
       setScoreStatus("idle");
@@ -147,8 +196,6 @@ export function JustDanceGame({ referenceVideoUrl }) {
       if (uploadError) {
         throw uploadError;
       }
-      setUploadPath(path);
-      setStatus("done");
       const { data } = supabase.storage
         .from("dance-captures")
         .getPublicUrl(path);
@@ -165,30 +212,43 @@ export function JustDanceGame({ referenceVideoUrl }) {
   const resetRecording = () => {
     if (recordedUrl) URL.revokeObjectURL(recordedUrl);
     setRecordedUrl("");
-    setUploadPath("");
     setStatus("ready");
     setScore(null);
     setScoreStatus("idle");
+  };
+
+  const playReference = () => {
+    if (referenceVideoRef.current) {
+      referenceVideoRef.current.currentTime = 0;
+      referenceVideoRef.current.play().catch(() => {});
+    }
   };
 
   const renderPrimaryButton = () => {
     if (status === "idle" || status === "error") {
       return (
         <SoftButton onClick={startCamera} disabled={status === "recording"}>
-          Ouvrir la caméra
+          Ouvrir la camera
         </SoftButton>
       );
     }
     if (status === "ready") {
-      return <SoftButton onClick={startRecording}>Filmer 10s</SoftButton>;
+      return (
+        <SoftButton
+          onClick={() => {
+            playReference();
+            startRecording();
+          }}
+        >
+          Filmer 10s
+        </SoftButton>
+      );
     }
     if (status === "recording") {
       return <SoftButton disabled>Enregistrement...</SoftButton>;
     }
     if (status === "recorded") {
-      return (
-        <SoftButton onClick={uploadRecording}>Obtenir le résultat</SoftButton>
-      );
+      return <SoftButton onClick={uploadRecording}>Obtenir le resultat</SoftButton>;
     }
     if (status === "uploading") {
       return <SoftButton disabled>Envoi en cours...</SoftButton>;
@@ -202,32 +262,45 @@ export function JustDanceGame({ referenceVideoUrl }) {
   return (
     <div className="jd-screen">
       <div className="jd-panel">
-        <h1 className="jd-title">Défi Just Dance</h1>
+        <button
+          className="jd-close"
+          type="button"
+          onClick={() => {
+            if (onClose) onClose();
+          }}
+          aria-label="Fermer"
+        >
+          <img src={closeIcon} alt="Fermer" />
+        </button>
+        <h1 className="jd-title">DEFI JUST DANCE</h1>
         <p className="jd-subtitle">
-          Regarde la vidéo, filme-toi pendant 10 secondes, puis envoie ta danse.
+          Regarde la video, filme-toi pendant 10 secondes, puis on envoie ta
+          danse.
         </p>
 
         <div className="jd-media">
           <div className="jd-media-block">
-            <div className="jd-label">Vidéo de référence</div>
+            <div className="jd-label">Video de reference</div>
             {referenceVideoUrl ? (
               <video
                 className="jd-video"
                 src={referenceVideoUrl}
+                ref={referenceVideoRef}
                 controls
                 preload="metadata"
+                playsInline
               />
             ) : (
-              <div className="jd-placeholder">Ajoute l'URL de la vidéo</div>
+              <div className="jd-placeholder">Ajoute l'URL de la video</div>
             )}
           </div>
 
           <div className="jd-media-block">
-            <div className="jd-label">Ta caméra</div>
+            <div className="jd-label">Ta camera</div>
             {!recordedUrl && (
               <video
                 className="jd-video jd-video-live"
-                ref={videoRef}
+                ref={liveVideoRef}
                 autoPlay
                 playsInline
                 muted
@@ -235,7 +308,7 @@ export function JustDanceGame({ referenceVideoUrl }) {
             )}
             {recordedUrl && (
               <div className="jd-preview">
-                <div className="jd-label">Aperçu 10s</div>
+                <div className="jd-label">Apercu 10s</div>
                 <video
                   className="jd-video"
                   src={recordedUrl}
@@ -256,6 +329,25 @@ export function JustDanceGame({ referenceVideoUrl }) {
         {scoreStatus === "done" && score != null && (
           <div className="jd-success">
             Score danse : <strong>{score}/100</strong>
+          </div>
+        )}
+
+        {isWinner && (
+          <div className="jd-end-screen">
+            <button
+              className="jd-end-close"
+              type="button"
+              aria-label="Fermer"
+              onClick={() => onClose && onClose()}
+            >
+              <img src={closeIcon} alt="Fermer" />
+            </button>
+            <div className="jd-end-body">
+              <RewardButton
+                label="Réclame ta récompense"
+                onClick={() => onClose && onClose()}
+              />
+            </div>
           </div>
         )}
       </div>

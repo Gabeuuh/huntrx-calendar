@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import cloudImg from "./assets/Nuage.png";
 import backgroundImg from "./assets/monde1/background.png";
 import case1Disabled from "./assets/monde1/normalized/Case1-disable.png";
@@ -19,6 +19,13 @@ import {
   resolveDayState,
 } from "./stores/dayStore";
 import { useNanoStore } from "./stores/useNanoStore";
+import CardDay2 from "./card/CardDay2/CardDay2";
+import CardDay3 from "./card/CardDay3/CardDay3";
+import RewardScreens from "./card/CardDay3/RewardScreens";
+import { JustDanceGame } from "./just-dance/JustDanceGame";
+import refVideo from "./assets/monde1/danse/danse-just-dance.mp4";
+import { Navbar } from "./navbar/Navbar";
+import { AnimatePresence, motion } from "framer-motion";
 import "./App.css";
 
 const BOARD_WIDTH = 440;
@@ -52,29 +59,29 @@ const slots = [
     id: "day-4",
     type: "day",
     number: 4,
-    x: 285,
+    x: 280,
     y: 350,
   },
   {
     id: "day-3",
     type: "day",
     number: 3,
-    x: 146,
-    y: 530,
+    x: 155,
+    y: 525,
   },
   {
     id: "day-2",
     type: "day",
     number: 2,
-    x: 325,
-    y: 715,
+    x: 315,
+    y: 700,
   },
   {
     id: "day-1",
     type: "day",
     number: 1,
     x: 265,
-    y: 920,
+    y: 900,
   },
 ];
 
@@ -82,7 +89,6 @@ function App() {
   const scrollRef = useRef(null);
   const trackRef = useRef(null);
   const bounceTimer = useRef(null);
-  const scrollRaf = useRef(0);
   const touchStartY = useRef(0);
   const isTouching = useRef(false);
   const currentDay = useNanoStore(currentDayStore);
@@ -91,7 +97,12 @@ function App() {
     offsetX: 0,
     offsetY: 0,
   });
-  const [scrollExtra, setScrollExtra] = useState(0);
+  const [showDay2, setShowDay2] = useState(false);
+  const [day2Page, setDay2Page] = useState(1);
+  const [showGame, setShowGame] = useState(false);
+  const [showDay3, setShowDay3] = useState(false);
+  const [showReward3, setShowReward3] = useState(false);
+  const [rewardIndex, setRewardIndex] = useState(0);
 
   useEffect(() => {
     hydrateCurrentDayFromQuery();
@@ -131,6 +142,8 @@ function App() {
     window.addEventListener("resize", updateScale);
     return () => window.removeEventListener("resize", updateScale);
   }, []);
+
+  const scaledBoardHeight = BOARD_HEIGHT * layout.scale;
 
   useEffect(() => {
     const container = scrollRef.current;
@@ -204,49 +217,6 @@ function App() {
     };
   }, []);
 
-  const scheduleScrollExtra = () => {
-    if (scrollRaf.current) {
-      cancelAnimationFrame(scrollRaf.current);
-    }
-
-    scrollRaf.current = requestAnimationFrame(() => {
-      const container = scrollRef.current;
-      if (!container) return;
-
-      const images = container.querySelectorAll(".slot-image");
-      if (!images.length) return;
-
-      const containerRect = container.getBoundingClientRect();
-      let maxBottom = 0;
-
-      images.forEach((img) => {
-        const rect = img.getBoundingClientRect();
-        const bottom = rect.bottom - containerRect.top + container.scrollTop;
-        if (bottom > maxBottom) {
-          maxBottom = bottom;
-        }
-      });
-
-      const extra = Math.max(
-        0,
-        Math.ceil(maxBottom - container.clientHeight + 12)
-      );
-
-      setScrollExtra((prev) => (Math.abs(prev - extra) < 2 ? prev : extra));
-    });
-  };
-
-  useLayoutEffect(() => {
-    scheduleScrollExtra();
-
-    return () => {
-      if (scrollRaf.current) {
-        cancelAnimationFrame(scrollRaf.current);
-        scrollRaf.current = 0;
-      }
-    };
-  }, [layout, currentDay]);
-
   return (
     <main className="screen">
       <div className="ambient" aria-hidden="true" />
@@ -256,34 +226,176 @@ function App() {
           <div
             className="board"
             ref={trackRef}
-            style={{ backgroundImage: `url(${backgroundImg})` }}
+            style={{
+              backgroundImage: `url(${backgroundImg})`,
+              backgroundSize: "100% 100%",
+              height: `${scaledBoardHeight}px`,
+            }}
           >
             {slots.map((slot) => {
               const state = resolveDayState(slot.number, currentDay);
               const left = layout.offsetX + slot.x * layout.scale;
               const top = layout.offsetY + slot.y * layout.scale;
+              const canOpenDay2 =
+                slot.number === 2 && currentDay === 2 && state === "focus";
+              const canOpenDay3 =
+                slot.number === 3 && currentDay === 3 && state === "focus";
+              const canOpen = canOpenDay2 || canOpenDay3;
               return (
                 <div
                   key={slot.id}
-                  className={`slot slot-day slot-${state}`}
+                  className={`slot slot-day slot-${state} ${
+                    canOpen ? "slot-clickable" : ""
+                  }`}
                   style={{ top: `${top}px`, left: `${left}px` }}
+                  onClick={() => {
+                    if (canOpenDay2) {
+                      setDay2Page(1);
+                      setShowDay2(true);
+                      setShowGame(false);
+                    } else if (canOpenDay3) {
+                      setShowDay3(true);
+                      setShowGame(false);
+                    }
+                  }}
                 >
                   <img
                     className="slot-image"
                     src={dayImages[slot.number][state]}
                     alt={`Jour ${slot.number}`}
-                    onLoad={scheduleScrollExtra}
                   />
                 </div>
               );
             })}
           </div>
         </div>
-        <div
-          className="scroll-spacer"
-          style={{ height: `${scrollExtra}px` }}
-        />
+        <div className="scroll-spacer" style={{ height: 0 }} />
       </div>
+      <AnimatePresence>
+        {showDay2 && (
+          <motion.div
+            className="modal-overlay"
+            onClick={() => setShowDay2(false)}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="modal-card"
+              onClick={(e) => {
+                e.stopPropagation();
+              }}
+              initial={{ y: 30, opacity: 0, scale: 0.96 }}
+              animate={{ y: 0, opacity: 1, scale: 1 }}
+              exit={{ y: 20, opacity: 0, scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 260, damping: 22 }}
+            >
+              <CardDay2
+                page={day2Page}
+                onClose={() => setShowDay2(false)}
+                onNext={() => setDay2Page((p) => (p === 1 ? 2 : 1))}
+                onStart={() => {
+                  setShowDay2(false);
+                  setShowGame(true);
+                }}
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showDay3 && (
+          <motion.div
+            className="modal-overlay"
+            onClick={() => setShowDay3(false)}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="modal-card"
+              onClick={(e) => e.stopPropagation()}
+              initial={{ y: 30, opacity: 0, scale: 0.96 }}
+              animate={{ y: 0, opacity: 1, scale: 1 }}
+              exit={{ y: 20, opacity: 0, scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 260, damping: 22 }}
+            >
+              <CardDay3
+                onClose={() => setShowDay3(false)}
+                onActionPot={() => setShowDay3(false)}
+                onActionRecipes={() => {
+                  setShowDay3(false);
+                  setRewardIndex(0);
+                  setShowReward3(true);
+                }}
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showGame && (
+          <motion.div
+            className="modal-overlay"
+            onClick={() => setShowGame(false)}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="modal-card game-modal"
+              onClick={(e) => {
+                e.stopPropagation();
+              }}
+              initial={{ y: 32, opacity: 0, scale: 0.96 }}
+              animate={{ y: 0, opacity: 1, scale: 1 }}
+              exit={{ y: 26, opacity: 0, scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 260, damping: 22 }}
+            >
+              <JustDanceGame
+                referenceVideoUrl={refVideo}
+                onClose={() => setShowGame(false)}
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showReward3 && (
+          <motion.div
+            className="modal-overlay"
+            onClick={() => setShowReward3(false)}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              style={{ width: "100%", height: "100%" }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <RewardScreens
+                index={rewardIndex}
+                onClose={() => setShowReward3(false)}
+                onPrev={() =>
+                  setRewardIndex((idx) => Math.max(0, idx - 1))
+                }
+                onNext={() =>
+                  setRewardIndex((idx) =>
+                    Math.min(3, idx + 1)
+                  )
+                }
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <Navbar />
     </main>
   );
 }

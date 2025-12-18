@@ -10,7 +10,7 @@
   box-sizing: border-box;
   font-family: 'Inter', sans-serif;
   overflow: hidden;
-  background: url('../../assets/background-quete-light.png') center/cover no-repeat;
+  background: url('../../assets/background-quete-light.png') center/100% 100% no-repeat;
   box-shadow: 0 12px 28px rgba(0,0,0,0.18);
 }
 
@@ -25,6 +25,15 @@
   cursor: pointer;
   color: #0f2a38;
   z-index: 10;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+}
+
+.poc-close-btn img {
+  width: 16px;
+  height: 16px;
 }
 
 .poc-header {
@@ -62,14 +71,24 @@
   object-fit: cover;
 }
 
-.poc-content-wrapper {
+.poc-body {
   position: relative;
   flex: 1;
   padding-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.poc-row {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  justify-content: flex-start;
 }
 
 .poc-description {
-  width: 70%;
+  width: 55%;
   font-size: 15px;
   font-weight: 700;
   line-height: 1.35;
@@ -78,33 +97,36 @@
   color: #14171a;
 }
 
-.poc-character-overlay {
-  position: absolute;
-  top: -48px;
-  right: -12px;
-  width: 170px;
+.poc-character {
+  width: 190px;
   z-index: 5;
   pointer-events: none;
+  align-self: center;
 }
 
-.poc-character-teen {
-  position: absolute;
-  bottom: -8px;
-  right: -6px;
-  width: 180px;
-  z-index: 5;
-  pointer-events: none;
+.poc-character-box {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.page2-character {
+  width: 180px !important;
+  scale: 250%;
+  position: relative;
+  bottom: -5px;
+  right: -50px;
+  z-index: 0;
 }
 
 .poc-nav-arrow {
-  position: absolute;
-  bottom: 0;
-  right: 0;
   cursor: pointer;
   z-index: 6;
   font-size: 22px;
   font-weight: 800;
   color: #0f2a38;
+  transform: rotate(180deg);
+  align-self: flex-end;
 }
 
 .poc-nav-row {
@@ -122,13 +144,39 @@
   flex: 1;
 }
 
+.poc-cta-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+.poc-cta-with-character {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 30px;
+}
+
+.poc-arrow-icon {
+  width: 22px;
+  height: 22px;
+}
+
+.rotate {
+  transform: rotate(180deg);
+}
+
 @media (max-width: 420px) {
-  .poc-character-overlay,
-  .poc-character-teen {
+  .poc-character {
     width: 140px;
   }
 
   .poc-description {
-    width: 75%;
+    width: 80%;
+    align-self: center;
+    position: relative;
+    bottom: -30px;
   }
 }

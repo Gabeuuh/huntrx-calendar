@@ -1,0 +1,188 @@
+.day3-card {
+  position: relative;
+  width: 92vw;
+  max-width: 380px;
+  min-height: 520px;
+  background: url('../../assets/background-quete-light.png') center/100% 100% no-repeat;
+  border-radius: 12px;
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.2);
+  padding: 18px 16px 16px;
+  box-sizing: border-box;
+  font-family: "Inter", sans-serif;
+  overflow: hidden;
+}
+
+.day3-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: transparent;
+  border: none;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.day3-close img {
+  width: 14px;
+  height: 14px;
+}
+
+.day3-header {
+  text-align: center;
+  color: #0f2a38;
+  margin-bottom: 12px;
+}
+
+.day3-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  font-style: italic;
+}
+
+.day3-subtitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.day3-hero-wrapper {
+  width: 100%;
+  border: 4px solid #fff;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+  margin-bottom: 12px; /* colle le texte juste après l'image */
+}
+
+.day3-hero {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+.day3-body {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 35px;
+  align-items: flex-start;
+  padding: 0 2px;
+}
+
+.day3-character {
+  width: 120px;
+  height: auto;
+  object-fit: contain;
+  align-self: flex-start;
+}
+
+.day3-text {
+  display: flex;
+  flex-direction: column;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #131313;
+  padding-top: 4px;
+}
+
+.day3-mainText {
+  margin: 8px 0 0 0 ;
+}
+
+.day3-bottom-text {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #131313;
+  padding: 0 2px;
+}
+
+.day3-bottom-text p {
+  margin: 0;
+}
+
+.day3-actions {
+  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.day3-actions .softBtn {
+  width: 100%;
+}
+
+.reward3-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: grid;
+  place-items: center;
+  z-index: 80;
+}
+
+.reward3-screen {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background-size: cover;
+  background-position: center;
+  border-radius: 0;
+  overflow: hidden;
+  box-shadow: none;
+  display: flex;
+  align-items: flex-end;
+  box-sizing: border-box;
+}
+
+.reward3-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 34px;
+  height: 34px;
+  background: transparent;
+  border: none;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.reward3-close img {
+  width: 16px;
+  height: 16px;
+}
+
+.reward3-actions {
+  width: 100%;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  padding: 0 14px 16px;
+  position: relative;
+  top: -150px;
+}
+
+.reward3-actions .reward-btn {
+  flex: 1;
+}
+
+@media (max-width: 420px) {
+  .day3-card {
+    padding: 16px 14px;
+  }
+
+  .day3-character {
+    width: 125%;
+  }
+
+  .day3-text {
+    font-size: 14px;
+  }
+}

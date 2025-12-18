@@ -1,17 +1,50 @@
-﻿import React from "react";
+import React from "react";
 import "./cardDay2.css";
 import SoftButton from "../../button/Button";
 import heroImg from "../../assets/monde1/danse/danse-hero.png";
 import charManager from "../../assets/monde1/danse/danse-card1-manager.png";
-import charTeen from "../../assets/monde1/danse/danse-card1-manager.png";
+import charTeen from "../../assets/monde1/danse/manager-page2.png";
+import closeIcon from "../../assets/close.svg";
+import arrowIcon from "../../assets/arrow.svg";
+
+const page1Text =
+  "C'est l'heure de danser !\nSuis les pas, ressens le rythme.\nHuntr/x s'entraîne avec toi.\nPlus on danse ensemble,\nplus on devient fort.\n\nPartage tes mouvements,\ninspire la communauté\net brille !";
+
+const page2Text =
+  "Pose ton téléphone, lance le défi. L'application détecte tes mouvements.\n\nÀ toi d'enchaîner les Perfect !";
 
 const CardDay2 = ({ onClose, onNext, onStart, page = 1 }) => {
-  const isPage2 = page === 2;
+  const renderPage1 = () => (
+    <div className="poc-body poc-body--page1">
+      <div className="poc-row">
+        <img src={charManager} alt="Personnage" className="poc-character" />
+        <p className="poc-description">{page1Text}</p>
+      </div>
+      <div className="poc-nav-arrow" onClick={onNext}>
+        <img src={arrowIcon} alt="Suivant" className="poc-arrow-icon rotate" />
+      </div>
+    </div>
+  );
+
+  const renderPage2 = () => (
+    <div className="poc-body poc-body--page2">
+      <p className="poc-description">{page2Text}</p>
+      <div className="poc-cta-row">
+        <div className="poc-nav-arrow" onClick={onNext}>
+          <img src={arrowIcon} alt="Précédent" className="poc-arrow-icon" />
+        </div>
+        <div className="poc-cta-with-character">
+          <img src={charTeen} alt="Personnage" className="poc-character page2-character" />
+          <SoftButton onClick={onStart}>C'est parti !</SoftButton>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="poc-card-container">
       <button className="poc-close-btn" onClick={onClose}>
-        x
+        <img src={closeIcon} alt="Fermer" />
       </button>
 
       <div className="poc-header">
@@ -23,32 +56,7 @@ const CardDay2 = ({ onClose, onNext, onStart, page = 1 }) => {
         <img src={heroImg} alt="Just Dance Huntrix" className="poc-main-img" />
       </div>
 
-      <div className="poc-content-wrapper">
-        <p className="poc-description">
-          {isPage2
-            ? "Pose ton téléphone, lance le défi. L'application détecte tes mouvements.\n\nÀ toi d’enchaîner les Perfect !"
-            : "C'est l'heure de danser !\nSuis les pas, ressens le rythme.\nHuntr/x s'entraîne avec toi.\nPlus on danse ensemble,\nplus on devient fort.\n\nPartage tes mouvements,\ninspire la communauté\net brille !"}
-        </p>
-
-        <img
-          src={isPage2 ? charTeen : charManager}
-          alt="Personnage"
-          className={isPage2 ? "poc-character-teen" : "poc-character-overlay"}
-        />
-
-        {isPage2 ? (
-          <div className="poc-nav-row">
-            <div className="poc-nav-arrow" onClick={onNext}>
-              ←
-            </div>
-            <SoftButton onClick={onStart}>C'est parti !</SoftButton>
-          </div>
-        ) : (
-          <div className="poc-nav-arrow" onClick={onNext}>
-            →
-          </div>
-        )}
-      </div>
+      {page === 2 ? renderPage2() : renderPage1()}
     </div>
   );
 };

@@ -57,7 +57,8 @@
   width: 100%;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 0;
+  padding: 0 0 100px; /* laisse un peu d'espace pour la navbar fixe */
+  box-sizing: border-box;
   z-index: 1;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
@@ -73,7 +74,6 @@
 .track {
   position: relative;
   width: 100%;
-  height: 100%;
   min-height: 100%;
 }
 
@@ -87,6 +87,19 @@
   background-repeat: no-repeat;
   background-position: center;
   background-size: cover;
+  overflow: hidden; /* cache ce qui dépasse du fond (slots en bas) */
+}
+
+.board::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 100%;
+  width: 100%;
+  height: 260px;
+  background: linear-gradient(180deg, rgba(242, 244, 243, 0.95), rgba(242, 244, 243, 0.85), rgba(242, 244, 243, 0));
+  pointer-events: none;
+  z-index: 1;
 }
 
 .board.is-dragging {
@@ -130,4 +143,31 @@
 .scroll-spacer {
   width: 100%;
   pointer-events: none;
+}
+
+.slot-clickable {
+  cursor: pointer;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: grid;
+  place-items: center;
+  z-index: 10;
+  padding: 16px;
+}
+
+.modal-card {
+  max-width: 420px;
+  width: 100%;
+}
+
+.game-modal {
+  max-width: 400px;
+  width: 100%;
+  height: auto;
+  border-radius: 18px;
+  overflow: hidden;
 }
