@@ -1,137 +1,134 @@
-﻿/* Card.css */
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,900;1,900&display=swap');
-
-.card-container {
+﻿.poc-card-container {
   position: relative;
   width: 92vw;
   max-width: 380px;
-  min-height: 500px;
-  border-radius: 5px;
-  padding: 20px 15px;
+  min-height: 520px;
+  border-radius: 10px;
+  padding: 18px 16px 12px;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
   font-family: 'Inter', sans-serif;
   overflow: hidden;
-  border: 1px solid rgba(0,0,0,0.1); 
-  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  background: url('../../assets/background-quete-light.png') center/cover no-repeat;
+  box-shadow: 0 12px 28px rgba(0,0,0,0.18);
 }
 
-/* Thèmes */
-.theme-light {
-  background: url('../assets/background-quete-light.png') center/cover no-repeat;
-}
-
-.theme-dark {
-  background: url('../assets/background-quete-dark.png') center/cover no-repeat;
-}
-
-/* Header */
-.close-btn {
+.poc-close-btn {
   position: absolute;
-  top: 12px;
-  right: 15px;
+  top: 10px;
+  right: 12px;
   background: none;
   border: none;
   font-size: 20px;
   font-weight: 900;
   cursor: pointer;
-  color: #004242;
+  color: #0f2a38;
   z-index: 10;
 }
 
-.header {
+.poc-header {
   text-align: center;
   margin-bottom: 10px;
+  color: #0f2a38;
 }
 
-.day-text {
-  font-size: 2.4rem;
+.poc-day-title {
+  font-size: 24px;
   font-weight: 900;
   font-style: italic;
   margin: 0;
-  letter-spacing: -1px;
+  letter-spacing: 0.04em;
 }
 
-.title-text {
-  font-size: 1.2rem;
+.poc-subtitle {
+  font-size: 16px;
   font-weight: 800;
   margin: 0;
 }
 
-/* Media Box avec bordure blanche épaisse */
-.media-box {
+.poc-media-container {
   width: 100%;
   border: 4px solid white;
-  border-radius: 4px;
+  border-radius: 6px;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.18);
   z-index: 1;
 }
 
-.media-img {
+.poc-main-img {
   width: 100%;
   display: block;
   object-fit: cover;
 }
 
-/* Content Area */
-.content-wrapper {
+.poc-content-wrapper {
   position: relative;
   flex: 1;
-  padding-top: 20px;
+  padding-top: 18px;
 }
 
-.description-text {
+.poc-description {
   width: 70%;
-  font-size: 0.95rem;
-  font-weight: 800; /* Texte très gras comme sur l'image */
-  line-height: 1.2;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.35;
+  white-space: pre-wrap;
+  margin: 0;
+  color: #14171a;
 }
 
-/* Personnage : Il doit passer DEVANT l'image et le texte */
-.character-overlay {
+.poc-character-overlay {
   position: absolute;
-  top: -60px; /* Remonte pour chevaucher l'image */
-  right: -10px;
-  width: 160px;
+  top: -48px;
+  right: -12px;
+  width: 170px;
   z-index: 5;
   pointer-events: none;
 }
 
-/* Navigation Arrow */
-.nav-arrow {
+.poc-character-teen {
+  position: absolute;
+  bottom: -8px;
+  right: -6px;
+  width: 180px;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.poc-nav-arrow {
   position: absolute;
   bottom: 0;
   right: 0;
   cursor: pointer;
   z-index: 6;
+  font-size: 22px;
+  font-weight: 800;
+  color: #0f2a38;
 }
 
-.arrow-icon {
-  font-size: 1.8rem;
-  color: #004242;
-  font-weight: bold;
-}
-
-/* Footer & Button Container */
-.card-footer {
-  margin-top: 10px;
-  padding: 0 6px 8px;
-  z-index: 7;
+.poc-nav-row {
   display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
 }
 
-.card-footer .softBtn {
-  flex: 1 1 45%;
-  min-width: 140px;
-  height: 56px;
-  border-radius: 18px;
+.poc-nav-row .poc-nav-arrow {
+  position: static;
 }
 
-.card-footer .softBtn::before {
-  inset: 8px;
-  border-radius: 14px;
+.poc-nav-row .softBtn {
+  flex: 1;
+}
+
+@media (max-width: 420px) {
+  .poc-character-overlay,
+  .poc-character-teen {
+    width: 140px;
+  }
+
+  .poc-description {
+    width: 75%;
+  }
 }

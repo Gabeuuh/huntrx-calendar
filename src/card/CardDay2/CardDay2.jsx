@@ -1,52 +1,53 @@
-import React from 'react';
-import './cardDay2.css';
-import SoftButton from '../../button/Button'; 
+﻿import React from "react";
+import "./cardDay2.css";
+import SoftButton from "../../button/Button";
+import heroImg from "../../assets/monde1/danse/danse-hero.png";
+import charManager from "../../assets/monde1/danse/danse-card1-manager.png";
+import charTeen from "../../assets/monde1/danse/danse-card1-manager.png";
 
-const CardDay2 = ({ onClose, onNext, onStart }) => {
+const CardDay2 = ({ onClose, onNext, onStart, page = 1 }) => {
+  const isPage2 = page === 2;
+
   return (
     <div className="poc-card-container">
-      {/* Bouton de fermeture */}
-      <button className="poc-close-btn" onClick={onClose}>×</button>
-      
-      {/* Header avec la police épaisse et italique */}
+      <button className="poc-close-btn" onClick={onClose}>
+        x
+      </button>
+
       <div className="poc-header">
         <h2 className="poc-day-title">JOUR 2</h2>
         <p className="poc-subtitle">Défi danse !</p>
       </div>
 
-      {/* Image principale avec bordure blanche */}
       <div className="poc-media-container">
-        <img 
-          src="/assets/just-dance-banner.png" 
-          alt="Just Dance Huntrix" 
-          className="poc-main-img" 
-        />
+        <img src={heroImg} alt="Just Dance Huntrix" className="poc-main-img" />
       </div>
 
-      {/* Zone de contenu avec le personnage en overlay */}
       <div className="poc-content-wrapper">
         <p className="poc-description">
-          C'est l'heure de danser ! Suis les pas, ressens le rythme. Huntr/x s'entraîne avec toi.
+          {isPage2
+            ? "Pose ton téléphone, lance le défi. L'application détecte tes mouvements.\n\nÀ toi d’enchaîner les Perfect !"
+            : "C'est l'heure de danser !\nSuis les pas, ressens le rythme.\nHuntr/x s'entraîne avec toi.\nPlus on danse ensemble,\nplus on devient fort.\n\nPartage tes mouvements,\ninspire la communauté\net brille !"}
         </p>
-        
-        {/* Le personnage qui dépasse sur l'image et le texte */}
-        <img 
-          src="/assets/character-dancer.png" 
-          alt="Character" 
-          className="poc-character-overlay" 
+
+        <img
+          src={isPage2 ? charTeen : charManager}
+          alt="Personnage"
+          className={isPage2 ? "poc-character-teen" : "poc-character-overlay"}
         />
 
-        {/* Petite flèche de navigation à droite */}
-        <div className="poc-nav-arrow" onClick={onNext}>
-          →
-        </div>
-      </div>
-
-      {/* Bouton d'action principal */}
-      <div className="poc-footer">
-        <SoftButton onClick={onStart}>
-          C'est parti !
-        </SoftButton>
+        {isPage2 ? (
+          <div className="poc-nav-row">
+            <div className="poc-nav-arrow" onClick={onNext}>
+              ←
+            </div>
+            <SoftButton onClick={onStart}>C'est parti !</SoftButton>
+          </div>
+        ) : (
+          <div className="poc-nav-arrow" onClick={onNext}>
+            →
+          </div>
+        )}
       </div>
     </div>
   );
