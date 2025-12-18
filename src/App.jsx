@@ -1,28 +1,28 @@
-import { useEffect, useRef, useState } from 'react'
-import cloudImg from './assets/Nuage.png'
-import backgroundImg from './assets/monde1/background.png'
-import case1Disabled from './assets/monde1/normalized/Case1-disable.png'
-import case1Focus from './assets/monde1/normalized/Case1-focus.png'
-import case1Normal from './assets/monde1/normalized/Case1-normal.png'
-import case2Disabled from './assets/monde1/normalized/Case2-disable.png'
-import case2Focus from './assets/monde1/normalized/Case2-focus.png'
-import case2Normal from './assets/monde1/normalized/Case2-normal.png'
-import case3Disabled from './assets/monde1/normalized/Case3-disable.png'
-import case3Focus from './assets/monde1/normalized/Case3-focus.png'
-import case3Normal from './assets/monde1/normalized/Case3-normal.png'
-import case4Disabled from './assets/monde1/normalized/Case4-disable.png'
-import case4Focus from './assets/monde1/normalized/Case4-focus.png'
-import case4Normal from './assets/monde1/normalized/Case4-normal.png'
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import cloudImg from "./assets/Nuage.png";
+import backgroundImg from "./assets/monde1/background.png";
+import case1Disabled from "./assets/monde1/normalized/Case1-disable.png";
+import case1Focus from "./assets/monde1/normalized/Case1-focus.png";
+import case1Normal from "./assets/monde1/normalized/Case1-normal.png";
+import case2Disabled from "./assets/monde1/normalized/Case2-disable.png";
+import case2Focus from "./assets/monde1/normalized/Case2-focus.png";
+import case2Normal from "./assets/monde1/normalized/Case2-normal.png";
+import case3Disabled from "./assets/monde1/normalized/Case3-disable.png";
+import case3Focus from "./assets/monde1/normalized/Case3-focus.png";
+import case3Normal from "./assets/monde1/normalized/Case3-normal.png";
+import case4Disabled from "./assets/monde1/normalized/Case4-disable.png";
+import case4Focus from "./assets/monde1/normalized/Case4-focus.png";
+import case4Normal from "./assets/monde1/normalized/Case4-normal.png";
 import {
   currentDayStore,
   hydrateCurrentDayFromQuery,
   resolveDayState,
-} from './stores/dayStore'
-import { useNanoStore } from './stores/useNanoStore'
-import './App.css'
+} from "./stores/dayStore";
+import { useNanoStore } from "./stores/useNanoStore";
+import "./App.css";
 
-const BOARD_WIDTH = 440
-const BOARD_HEIGHT = 956
+const BOARD_WIDTH = 440;
+const BOARD_HEIGHT = 956;
 
 const dayImages = {
   1: {
@@ -45,161 +45,207 @@ const dayImages = {
     focus: case4Focus,
     normal: case4Normal,
   },
-}
+};
 
 const slots = [
   {
-    id: 'day-4',
-    type: 'day',
+    id: "day-4",
+    type: "day",
     number: 4,
     x: 285,
     y: 350,
   },
   {
-    id: 'day-3',
-    type: 'day',
+    id: "day-3",
+    type: "day",
     number: 3,
     x: 146,
     y: 530,
   },
   {
-    id: 'day-2',
-    type: 'day',
+    id: "day-2",
+    type: "day",
     number: 2,
     x: 325,
     y: 715,
   },
   {
-    id: 'day-1',
-    type: 'day',
+    id: "day-1",
+    type: "day",
     number: 1,
     x: 265,
     y: 920,
   },
-]
+];
 
 function App() {
-  const scrollRef = useRef(null)
-  const trackRef = useRef(null)
-  const bounceTimer = useRef(null)
-  const touchStartY = useRef(0)
-  const isTouching = useRef(false)
-  const currentDay = useNanoStore(currentDayStore)
+  const scrollRef = useRef(null);
+  const trackRef = useRef(null);
+  const bounceTimer = useRef(null);
+  const scrollRaf = useRef(0);
+  const touchStartY = useRef(0);
+  const isTouching = useRef(false);
+  const currentDay = useNanoStore(currentDayStore);
   const [layout, setLayout] = useState({
     scale: 1,
     offsetX: 0,
     offsetY: 0,
-  })
+  });
+  const [scrollExtra, setScrollExtra] = useState(0);
 
   useEffect(() => {
-    hydrateCurrentDayFromQuery()
-  }, [])
+    hydrateCurrentDayFromQuery();
+  }, []);
 
   useEffect(() => {
-    const container = scrollRef.current
-    if (!container) return
+    const container = scrollRef.current;
+    if (!container) return;
 
     const updateScale = () => {
       const scale = Math.max(
         container.clientWidth / BOARD_WIDTH,
-        container.clientHeight / BOARD_HEIGHT,
-      )
-      const offsetX = (container.clientWidth - BOARD_WIDTH * scale) / 2
-      const offsetY = (container.clientHeight - BOARD_HEIGHT * scale) / 2
+        container.clientHeight / BOARD_HEIGHT
+      );
+      const offsetX = (container.clientWidth - BOARD_WIDTH * scale) / 2;
+      const offsetY = (container.clientHeight - BOARD_HEIGHT * scale) / 2;
       setLayout((prev) => {
         if (
           Math.abs(prev.scale - scale) < 0.0005 &&
           Math.abs(prev.offsetX - offsetX) < 0.5 &&
           Math.abs(prev.offsetY - offsetY) < 0.5
         ) {
-          return prev
+          return prev;
         }
-        return { scale, offsetX, offsetY }
-      })
+        return { scale, offsetX, offsetY };
+      });
+    };
+
+    updateScale();
+
+    if ("ResizeObserver" in window) {
+      const observer = new ResizeObserver(updateScale);
+      observer.observe(container);
+      return () => observer.disconnect();
     }
 
-    updateScale()
-
-    if ('ResizeObserver' in window) {
-      const observer = new ResizeObserver(updateScale)
-      observer.observe(container)
-      return () => observer.disconnect()
-    }
-
-    window.addEventListener('resize', updateScale)
-    return () => window.removeEventListener('resize', updateScale)
-  }, [])
+    window.addEventListener("resize", updateScale);
+    return () => window.removeEventListener("resize", updateScale);
+  }, []);
 
   useEffect(() => {
-    const container = scrollRef.current
-    const track = trackRef.current
-    if (!container || !track) return
+    const container = scrollRef.current;
+    const track = trackRef.current;
+    if (!container || !track) return;
 
     const setBounce = (value, immediate) => {
       if (immediate) {
-        track.classList.add('is-dragging')
+        track.classList.add("is-dragging");
       } else {
-        track.classList.remove('is-dragging')
+        track.classList.remove("is-dragging");
       }
-      track.style.setProperty('--bounce', `${value}px`)
-    }
+      track.style.setProperty("--bounce", `${value}px`);
+    };
 
     const settleBounce = () => {
       if (bounceTimer.current) {
-        clearTimeout(bounceTimer.current)
+        clearTimeout(bounceTimer.current);
       }
       bounceTimer.current = setTimeout(() => {
-        setBounce(0, false)
-      }, 120)
-    }
+        setBounce(0, false);
+      }, 120);
+    };
 
     const onWheel = (event) => {
-      if (event.deltaY >= 0) return
-      event.preventDefault()
-      const amount = Math.min(32, Math.max(0, -event.deltaY * 0.25))
-      setBounce(amount, false)
-      settleBounce()
-    }
+      if (event.deltaY >= 0 || container.scrollTop > 0) return;
+      event.preventDefault();
+      const amount = Math.min(32, Math.max(0, -event.deltaY * 0.25));
+      setBounce(amount, false);
+      settleBounce();
+    };
 
     const onTouchStart = (event) => {
-      if (event.touches.length !== 1) return
-      isTouching.current = true
-      touchStartY.current = event.touches[0].clientY
-      setBounce(0, true)
-    }
+      if (event.touches.length !== 1) return;
+      isTouching.current = true;
+      touchStartY.current = event.touches[0].clientY;
+      setBounce(0, true);
+    };
 
     const onTouchMove = (event) => {
-      if (!isTouching.current) return
-      const delta = event.touches[0].clientY - touchStartY.current
-      if (delta <= 0) return
-      event.preventDefault()
-      const amount = Math.min(36, delta * 0.35)
-      setBounce(amount, true)
-    }
+      if (!isTouching.current) return;
+      if (container.scrollTop > 0) return;
+      const delta = event.touches[0].clientY - touchStartY.current;
+      if (delta <= 0) return;
+      event.preventDefault();
+      const amount = Math.min(36, delta * 0.35);
+      setBounce(amount, true);
+    };
 
     const onTouchEnd = () => {
-      if (!isTouching.current) return
-      isTouching.current = false
-      setBounce(0, false)
-    }
+      if (!isTouching.current) return;
+      isTouching.current = false;
+      setBounce(0, false);
+    };
 
-    container.addEventListener('wheel', onWheel, { passive: false })
-    container.addEventListener('touchstart', onTouchStart, { passive: true })
-    container.addEventListener('touchmove', onTouchMove, { passive: false })
-    container.addEventListener('touchend', onTouchEnd)
-    container.addEventListener('touchcancel', onTouchEnd)
+    container.addEventListener("wheel", onWheel, { passive: false });
+    container.addEventListener("touchstart", onTouchStart, { passive: true });
+    container.addEventListener("touchmove", onTouchMove, { passive: false });
+    container.addEventListener("touchend", onTouchEnd);
+    container.addEventListener("touchcancel", onTouchEnd);
 
     return () => {
-      container.removeEventListener('wheel', onWheel)
-      container.removeEventListener('touchstart', onTouchStart)
-      container.removeEventListener('touchmove', onTouchMove)
-      container.removeEventListener('touchend', onTouchEnd)
-      container.removeEventListener('touchcancel', onTouchEnd)
+      container.removeEventListener("wheel", onWheel);
+      container.removeEventListener("touchstart", onTouchStart);
+      container.removeEventListener("touchmove", onTouchMove);
+      container.removeEventListener("touchend", onTouchEnd);
+      container.removeEventListener("touchcancel", onTouchEnd);
       if (bounceTimer.current) {
-        clearTimeout(bounceTimer.current)
+        clearTimeout(bounceTimer.current);
       }
+    };
+  }, []);
+
+  const scheduleScrollExtra = () => {
+    if (scrollRaf.current) {
+      cancelAnimationFrame(scrollRaf.current);
     }
-  }, [])
+
+    scrollRaf.current = requestAnimationFrame(() => {
+      const container = scrollRef.current;
+      if (!container) return;
+
+      const images = container.querySelectorAll(".slot-image");
+      if (!images.length) return;
+
+      const containerRect = container.getBoundingClientRect();
+      let maxBottom = 0;
+
+      images.forEach((img) => {
+        const rect = img.getBoundingClientRect();
+        const bottom = rect.bottom - containerRect.top + container.scrollTop;
+        if (bottom > maxBottom) {
+          maxBottom = bottom;
+        }
+      });
+
+      const extra = Math.max(
+        0,
+        Math.ceil(maxBottom - container.clientHeight + 12)
+      );
+
+      setScrollExtra((prev) => (Math.abs(prev - extra) < 2 ? prev : extra));
+    });
+  };
+
+  useLayoutEffect(() => {
+    scheduleScrollExtra();
+
+    return () => {
+      if (scrollRaf.current) {
+        cancelAnimationFrame(scrollRaf.current);
+        scrollRaf.current = 0;
+      }
+    };
+  }, [layout, currentDay]);
 
   return (
     <main className="screen">
@@ -213,9 +259,9 @@ function App() {
             style={{ backgroundImage: `url(${backgroundImg})` }}
           >
             {slots.map((slot) => {
-              const state = resolveDayState(slot.number, currentDay)
-              const left = layout.offsetX + slot.x * layout.scale
-              const top = layout.offsetY + slot.y * layout.scale
+              const state = resolveDayState(slot.number, currentDay);
+              const left = layout.offsetX + slot.x * layout.scale;
+              const top = layout.offsetY + slot.y * layout.scale;
               return (
                 <div
                   key={slot.id}
@@ -226,16 +272,20 @@ function App() {
                     className="slot-image"
                     src={dayImages[slot.number][state]}
                     alt={`Jour ${slot.number}`}
+                    onLoad={scheduleScrollExtra}
                   />
                 </div>
-              )
+              );
             })}
           </div>
         </div>
+        <div
+          className="scroll-spacer"
+          style={{ height: `${scrollExtra}px` }}
+        />
       </div>
-
     </main>
-  )
+  );
 }
 
-export default App
+export default App;

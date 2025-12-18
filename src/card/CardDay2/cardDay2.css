@@ -1,0 +1,137 @@
+﻿/* Card.css */
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,900;1,900&display=swap');
+
+.card-container {
+  position: relative;
+  width: 92vw;
+  max-width: 380px;
+  min-height: 500px;
+  border-radius: 5px;
+  padding: 20px 15px;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  font-family: 'Inter', sans-serif;
+  overflow: hidden;
+  border: 1px solid rgba(0,0,0,0.1); 
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+/* Thèmes */
+.theme-light {
+  background: url('../assets/background-quete-light.png') center/cover no-repeat;
+}
+
+.theme-dark {
+  background: url('../assets/background-quete-dark.png') center/cover no-repeat;
+}
+
+/* Header */
+.close-btn {
+  position: absolute;
+  top: 12px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  font-weight: 900;
+  cursor: pointer;
+  color: #004242;
+  z-index: 10;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.day-text {
+  font-size: 2.4rem;
+  font-weight: 900;
+  font-style: italic;
+  margin: 0;
+  letter-spacing: -1px;
+}
+
+.title-text {
+  font-size: 1.2rem;
+  font-weight: 800;
+  margin: 0;
+}
+
+/* Media Box avec bordure blanche épaisse */
+.media-box {
+  width: 100%;
+  border: 4px solid white;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 1;
+}
+
+.media-img {
+  width: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+/* Content Area */
+.content-wrapper {
+  position: relative;
+  flex: 1;
+  padding-top: 20px;
+}
+
+.description-text {
+  width: 70%;
+  font-size: 0.95rem;
+  font-weight: 800; /* Texte très gras comme sur l'image */
+  line-height: 1.2;
+}
+
+/* Personnage : Il doit passer DEVANT l'image et le texte */
+.character-overlay {
+  position: absolute;
+  top: -60px; /* Remonte pour chevaucher l'image */
+  right: -10px;
+  width: 160px;
+  z-index: 5;
+  pointer-events: none;
+}
+
+/* Navigation Arrow */
+.nav-arrow {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  cursor: pointer;
+  z-index: 6;
+}
+
+.arrow-icon {
+  font-size: 1.8rem;
+  color: #004242;
+  font-weight: bold;
+}
+
+/* Footer & Button Container */
+.card-footer {
+  margin-top: 10px;
+  padding: 0 6px 8px;
+  z-index: 7;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.card-footer .softBtn {
+  flex: 1 1 45%;
+  min-width: 140px;
+  height: 56px;
+  border-radius: 18px;
+}
+
+.card-footer .softBtn::before {
+  inset: 8px;
+  border-radius: 14px;
+}
