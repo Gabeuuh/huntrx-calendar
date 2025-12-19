@@ -1,6 +1,6 @@
 import { atom } from "nanostores";
 
-const TOTAL_DAYS = 4;
+const TOTAL_DAYS = 8;
 const DEFAULT_DAY = 2;
 
 const clampDay = (value) =>

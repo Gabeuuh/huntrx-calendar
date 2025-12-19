@@ -103,7 +103,15 @@
 }
 
 .base-seg {
-  z-index: 1; /* segment 1 au-dessus */
+  z-index: 2; /* segment 1 au-dessus */
+}
+
+.seg-seg2 {
+  z-index: 1; /* segment 2 au-dessus du 3 */
+}
+
+.seg-seg3 {
+  z-index: 0; /* segment 3 en dessous */
 }
 
 .board.is-dragging {

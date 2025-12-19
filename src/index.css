@@ -80,7 +80,7 @@
     }
 
 :root {
-  font-family: "Sora", "Avenir Next", "Trebuchet MS", sans-serif;
+  font-family: 'Antique Olive Std Roman', 'Antique Olive Std Light', sans-serif;
   line-height: 1.2;
   font-weight: 400;
   color: #103836;
@@ -152,4 +152,15 @@ q:before, q:after {
 table {
 	border-collapse: collapse;
 	border-spacing: 0;
+}
+
+/* Typo globale */
+body, p, input, button, textarea, select, label {
+  font-family: 'Antique Olive Std Roman', 'Antique Olive Std Light', sans-serif;
+}
+
+h1, h2, h3, h4, .title, .onb-title {
+  font-family: "Ethnocentric", 'Antique Olive Std Bold', sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.5px;
 }

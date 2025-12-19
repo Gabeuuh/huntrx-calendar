@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import cloudImg from "./assets/Nuage.png";
 import segment1Img from "./assets/plateau/segment1.png";
 import segment2Img from "./assets/plateau/segment2.png";
+import segment3Img from "./assets/plateau/endPlateau.png";
 import case1Disabled from "./assets/monde1/normalized/Case1-disable.png";
 import case1Focus from "./assets/monde1/normalized/Case1-focus.png";
 import case1Normal from "./assets/monde1/normalized/Case1-normal.png";
@@ -14,18 +15,18 @@ import case3Normal from "./assets/monde1/normalized/Case3-normal.png";
 import case4Disabled from "./assets/monde1/normalized/Case4-disable.png";
 import case4Focus from "./assets/monde1/normalized/Case4-focus.png";
 import case4Normal from "./assets/monde1/normalized/Case4-normal.png";
-import case5Disabled from "./assets/monde2/png/Case5-disable.png";
-import case5Focus from "./assets/monde2/png/Case5-focus.png";
-import case5Normal from "./assets/monde2/png/Case5-normal.png";
-import case6Disabled from "./assets/monde2/png/Case6-disable.png";
-import case6Focus from "./assets/monde2/png/Case6-focus.png";
-import case6Normal from "./assets/monde2/png/Case6-normal.png";
-import case7Disabled from "./assets/monde2/png/Case7-disable.png";
-import case7Focus from "./assets/monde2/png/Case7-focus.png";
-import case7Normal from "./assets/monde2/png/Case7-normal.png";
-import case8Disabled from "./assets/monde2/png/Case8-disable.png";
-import case8Focus from "./assets/monde2/png/Case8-focus.png";
-import case8Normal from "./assets/monde2/png/Case8-normal.png";
+import case5Disabled from "./assets/monde2/normalized/Case5-disable.png";
+import case5Focus from "./assets/monde2/normalized/Case5-focus.png";
+import case5Normal from "./assets/monde2/normalized/Case5-normal.png";
+import case6Disabled from "./assets/monde2/normalized/Case6-disable.png";
+import case6Focus from "./assets/monde2/normalized/Case6-focus.png";
+import case6Normal from "./assets/monde2/normalized/Case6-normal.png";
+import case7Disabled from "./assets/monde2/normalized/Case7-disable.png";
+import case7Focus from "./assets/monde2/normalized/Case7-focus.png";
+import case7Normal from "./assets/monde2/normalized/Case7-normal.png";
+import case8Disabled from "./assets/monde2/normalized/Case8-disable.png";
+import case8Focus from "./assets/monde2/normalized/Case8-focus.png";
+import case8Normal from "./assets/monde2/normalized/Case8-normal.png";
 import {
   currentDayStore,
   hydrateCurrentDayFromQuery,
@@ -41,11 +42,13 @@ import { JustDanceGame } from "./just-dance/JustDanceGame";
 import refVideo from "./assets/monde1/danse/danse-just-dance.mp4";
 import { Navbar } from "./navbar/Navbar";
 import { AnimatePresence, motion } from "framer-motion";
+import { Onboarding } from "./onboarding/Onboarding";
 import "./App.css";
 
 const BOARD_WIDTH = 440;
 const BOARD_HEIGHT = 956; // hauteur du segment de base (seg1)
 const SEGMENT_OVERLAP = 286; // chevauchement vertical entre segments
+const SEGMENT3_SHIFT = 0; // décale légèrement le segment 3 vers le bas pour l'enchaînement
 
 const dayImages = {
   1: {
@@ -128,7 +131,7 @@ const slots = [
     id: "day-5",
     type: "day",
     number: 5,
-    x: 220,
+    x: 175,
     y: 960,
     segment: "seg2",
   },
@@ -136,15 +139,15 @@ const slots = [
     id: "day-6",
     type: "day",
     number: 6,
-    x: 210,
-    y: 725,
+    x: 175,
+    y: 720,
     segment: "seg2",
   },
   {
     id: "day-7",
     type: "day",
     number: 7,
-    x: 370,
+    x: 325,
     y: 530,
     segment: "seg2",
   },
@@ -152,7 +155,7 @@ const slots = [
     id: "day-8",
     type: "day",
     number: 8,
-    x: 210,
+    x: 165,
     y: 350,
     segment: "seg2",
   },
@@ -179,6 +182,8 @@ function App() {
   const [rewardIndex, setRewardIndex] = useState(0);
   const [showKaraoke, setShowKaraoke] = useState(false);
   const [seg2Height, setSeg2Height] = useState(0);
+  const [seg3Height, setSeg3Height] = useState(0);
+  const [showOnboarding, setShowOnboarding] = useState(true);
 
   useEffect(() => {
     hydrateCurrentDayFromQuery();
@@ -194,6 +199,15 @@ function App() {
   }, []);
 
   useEffect(() => {
+    const img = new Image();
+    img.onload = () => {
+      const computed = (img.height / img.width) * BOARD_WIDTH;
+      setSeg3Height(computed);
+    };
+    img.src = segment3Img;
+  }, []);
+
+  useEffect(() => {
     const container = scrollRef.current;
     if (!container) return;
 
@@ -203,7 +217,7 @@ function App() {
         container.clientHeight / BOARD_HEIGHT
       );
       const offsetX = (container.clientWidth - BOARD_WIDTH * scale) / 2;
-      const offsetY = (container.clientHeight - BOARD_HEIGHT * scale) / 2;
+      const offsetY = 0; // plaque le plateau en haut pour voir les niveaux dès l'arrivée
       setLayout((prev) => {
         if (
           Math.abs(prev.scale - scale) < 0.0005 &&
@@ -234,6 +248,9 @@ function App() {
   if (seg2Height > 0) {
     segments.push({ id: "seg2", img: segment2Img, height: seg2Height });
   }
+  if (seg3Height > 0) {
+    segments.push({ id: "seg3", img: segment3Img, height: seg3Height });
+  }
 
   // Hauteur totale (on retire l'overlap pour chaque segment ajouté au-dessus)
   const totalHeight = segments.reduce((sum, seg, idx) => {
@@ -249,7 +266,26 @@ function App() {
     cursor += SEGMENT_OVERLAP;
   });
 
+  if (segmentOffsetsTop.seg3 !== undefined) {
+    segmentOffsetsTop.seg3 += SEGMENT3_SHIFT;
+  }
+
   const scaledBoardHeight = totalHeight * layout.scale;
+
+  // Scroll auto vers le jour courant (paramètre ?day=) une fois les tailles connues
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container || layout.scale === 0) return;
+    const slot = slots.find((s) => s.number === currentDay);
+    if (!slot) return;
+    const segTop = segmentOffsetsTop[slot.segment] || 0;
+    const target =
+      (segTop + slot.y) * layout.scale - container.clientHeight * 0.25;
+    container.scrollTo({
+      top: Math.max(0, target),
+      behavior: "auto",
+    });
+  }, [currentDay, layout.scale, segmentOffsetsTop]);
 
   useEffect(() => {
     const container = scrollRef.current;
@@ -341,7 +377,7 @@ function App() {
               return (
                 <div
                   key={seg.id}
-                  className={`board-segment ${seg.id === "seg1" ? "base-seg" : ""}`}
+                  className={`board-segment ${seg.id === "seg1" ? "base-seg" : ""} seg-${seg.id}`}
                   style={{
                     top: `${offsetTop * layout.scale}px`,
                     height: `${seg.height * layout.scale}px`,
@@ -368,7 +404,10 @@ function App() {
                   className={`slot slot-day slot-${state} ${
                     canOpen ? "slot-clickable" : ""
                   }`}
-                  style={{ top: `${top}px`, left: `${left}px` }}
+                  style={{
+                    top: `${top}px`,
+                    left: `${left}px`,
+                  }}
                   onClick={() => {
                     if (canOpenDay2) {
                       setDay2Page(1);
@@ -575,6 +614,8 @@ function App() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {showOnboarding && <Onboarding onDone={() => setShowOnboarding(false)} />}
     </main>
   );
 }
