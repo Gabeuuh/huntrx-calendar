@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import cloudImg from "./assets/Nuage.png";
-import backgroundImg from "./assets/monde1/background.png";
+import segment1Img from "./assets/plateau/segment1.png";
+import segment2Img from "./assets/plateau/segment2.png";
 import case1Disabled from "./assets/monde1/normalized/Case1-disable.png";
 import case1Focus from "./assets/monde1/normalized/Case1-focus.png";
 import case1Normal from "./assets/monde1/normalized/Case1-normal.png";
@@ -13,6 +14,18 @@ import case3Normal from "./assets/monde1/normalized/Case3-normal.png";
 import case4Disabled from "./assets/monde1/normalized/Case4-disable.png";
 import case4Focus from "./assets/monde1/normalized/Case4-focus.png";
 import case4Normal from "./assets/monde1/normalized/Case4-normal.png";
+import case5Disabled from "./assets/monde2/png/Case5-disable.png";
+import case5Focus from "./assets/monde2/png/Case5-focus.png";
+import case5Normal from "./assets/monde2/png/Case5-normal.png";
+import case6Disabled from "./assets/monde2/png/Case6-disable.png";
+import case6Focus from "./assets/monde2/png/Case6-focus.png";
+import case6Normal from "./assets/monde2/png/Case6-normal.png";
+import case7Disabled from "./assets/monde2/png/Case7-disable.png";
+import case7Focus from "./assets/monde2/png/Case7-focus.png";
+import case7Normal from "./assets/monde2/png/Case7-normal.png";
+import case8Disabled from "./assets/monde2/png/Case8-disable.png";
+import case8Focus from "./assets/monde2/png/Case8-focus.png";
+import case8Normal from "./assets/monde2/png/Case8-normal.png";
 import {
   currentDayStore,
   hydrateCurrentDayFromQuery,
@@ -21,7 +34,9 @@ import {
 import { useNanoStore } from "./stores/useNanoStore";
 import CardDay2 from "./card/CardDay2/CardDay2";
 import CardDay3 from "./card/CardDay3/CardDay3";
+import CardDay4 from "./card/CardDay4/CardDay4";
 import RewardScreens from "./card/CardDay3/RewardScreens";
+import { KaraokeGame } from "./karaoke/KaraokeGame";
 import { JustDanceGame } from "./just-dance/JustDanceGame";
 import refVideo from "./assets/monde1/danse/danse-just-dance.mp4";
 import { Navbar } from "./navbar/Navbar";
@@ -29,7 +44,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import "./App.css";
 
 const BOARD_WIDTH = 440;
-const BOARD_HEIGHT = 956;
+const BOARD_HEIGHT = 956; // hauteur du segment de base (seg1)
+const SEGMENT_OVERLAP = 286; // chevauchement vertical entre segments
 
 const dayImages = {
   1: {
@@ -52,6 +68,26 @@ const dayImages = {
     focus: case4Focus,
     normal: case4Normal,
   },
+  5: {
+    disabled: case5Disabled,
+    focus: case5Focus,
+    normal: case5Normal,
+  },
+  6: {
+    disabled: case6Disabled,
+    focus: case6Focus,
+    normal: case6Normal,
+  },
+  7: {
+    disabled: case7Disabled,
+    focus: case7Focus,
+    normal: case7Normal,
+  },
+  8: {
+    disabled: case8Disabled,
+    focus: case8Focus,
+    normal: case8Normal,
+  },
 };
 
 const slots = [
@@ -61,6 +97,7 @@ const slots = [
     number: 4,
     x: 280,
     y: 350,
+    segment: "seg1",
   },
   {
     id: "day-3",
@@ -68,6 +105,7 @@ const slots = [
     number: 3,
     x: 155,
     y: 525,
+    segment: "seg1",
   },
   {
     id: "day-2",
@@ -75,6 +113,7 @@ const slots = [
     number: 2,
     x: 315,
     y: 700,
+    segment: "seg1",
   },
   {
     id: "day-1",
@@ -82,6 +121,40 @@ const slots = [
     number: 1,
     x: 265,
     y: 900,
+    segment: "seg1",
+  },
+  // Monde 2 (positions à ajuster après repérage précis)
+  {
+    id: "day-5",
+    type: "day",
+    number: 5,
+    x: 220,
+    y: 960,
+    segment: "seg2",
+  },
+  {
+    id: "day-6",
+    type: "day",
+    number: 6,
+    x: 210,
+    y: 725,
+    segment: "seg2",
+  },
+  {
+    id: "day-7",
+    type: "day",
+    number: 7,
+    x: 370,
+    y: 530,
+    segment: "seg2",
+  },
+  {
+    id: "day-8",
+    type: "day",
+    number: 8,
+    x: 210,
+    y: 350,
+    segment: "seg2",
   },
 ];
 
@@ -101,11 +174,23 @@ function App() {
   const [day2Page, setDay2Page] = useState(1);
   const [showGame, setShowGame] = useState(false);
   const [showDay3, setShowDay3] = useState(false);
+  const [showDay4, setShowDay4] = useState(false);
   const [showReward3, setShowReward3] = useState(false);
   const [rewardIndex, setRewardIndex] = useState(0);
+  const [showKaraoke, setShowKaraoke] = useState(false);
+  const [seg2Height, setSeg2Height] = useState(0);
 
   useEffect(() => {
     hydrateCurrentDayFromQuery();
+  }, []);
+
+  useEffect(() => {
+    const img = new Image();
+    img.onload = () => {
+      const computed = (img.height / img.width) * BOARD_WIDTH;
+      setSeg2Height(computed);
+    };
+    img.src = segment2Img;
   }, []);
 
   useEffect(() => {
@@ -143,7 +228,28 @@ function App() {
     return () => window.removeEventListener("resize", updateScale);
   }, []);
 
-  const scaledBoardHeight = BOARD_HEIGHT * layout.scale;
+  // Prépare les segments du plateau du bas vers le haut
+  // Segments empilés du bas vers le haut avec chevauchement
+  const segments = [{ id: "seg1", img: segment1Img, height: BOARD_HEIGHT }];
+  if (seg2Height > 0) {
+    segments.push({ id: "seg2", img: segment2Img, height: seg2Height });
+  }
+
+  // Hauteur totale (on retire l'overlap pour chaque segment ajouté au-dessus)
+  const totalHeight = segments.reduce((sum, seg, idx) => {
+    return sum + seg.height - (idx > 0 ? SEGMENT_OVERLAP : 0);
+  }, 0);
+
+  // Offsets top en partant du bas : seg1 est le plus bas
+  const segmentOffsetsTop = {};
+  let cursor = totalHeight;
+  segments.forEach((seg, idx) => {
+    cursor -= seg.height;
+    segmentOffsetsTop[seg.id] = cursor;
+    cursor += SEGMENT_OVERLAP;
+  });
+
+  const scaledBoardHeight = totalHeight * layout.scale;
 
   useEffect(() => {
     const container = scrollRef.current;
@@ -227,20 +333,35 @@ function App() {
             className="board"
             ref={trackRef}
             style={{
-              backgroundImage: `url(${backgroundImg})`,
-              backgroundSize: "100% 100%",
               height: `${scaledBoardHeight}px`,
             }}
           >
+            {segments.map((seg) => {
+              const offsetTop = segmentOffsetsTop[seg.id] || 0;
+              return (
+                <div
+                  key={seg.id}
+                  className={`board-segment ${seg.id === "seg1" ? "base-seg" : ""}`}
+                  style={{
+                    top: `${offsetTop * layout.scale}px`,
+                    height: `${seg.height * layout.scale}px`,
+                    backgroundImage: `url(${seg.img})`,
+                  }}
+                />
+              );
+            })}
             {slots.map((slot) => {
               const state = resolveDayState(slot.number, currentDay);
               const left = layout.offsetX + slot.x * layout.scale;
-              const top = layout.offsetY + slot.y * layout.scale;
+              const segTop = segmentOffsetsTop[slot.segment] || 0;
+              const top = layout.offsetY + (segTop + slot.y) * layout.scale;
               const canOpenDay2 =
                 slot.number === 2 && currentDay === 2 && state === "focus";
               const canOpenDay3 =
                 slot.number === 3 && currentDay === 3 && state === "focus";
-              const canOpen = canOpenDay2 || canOpenDay3;
+              const canOpenDay4 =
+                slot.number === 4 && currentDay === 4 && state === "focus";
+              const canOpen = canOpenDay2 || canOpenDay3 || canOpenDay4;
               return (
                 <div
                   key={slot.id}
@@ -255,6 +376,9 @@ function App() {
                       setShowGame(false);
                     } else if (canOpenDay3) {
                       setShowDay3(true);
+                      setShowGame(false);
+                    } else if (canOpenDay4) {
+                      setShowDay4(true);
                       setShowGame(false);
                     }
                   }}
@@ -364,6 +488,35 @@ function App() {
       </AnimatePresence>
 
       <AnimatePresence>
+        {showDay4 && (
+          <motion.div
+            className="modal-overlay danger-overlay"
+            onClick={() => setShowDay4(false)}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="modal-card"
+              onClick={(e) => e.stopPropagation()}
+              initial={{ y: 30, opacity: 0, scale: 0.96 }}
+              animate={{ y: 0, opacity: 1, scale: 1 }}
+              exit={{ y: 20, opacity: 0, scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 260, damping: 22 }}
+            >
+              <CardDay4
+                onClose={() => setShowDay4(false)}
+                onStart={() => {
+                  setShowDay4(false);
+                  setShowKaraoke(true);
+                }}
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
         {showReward3 && (
           <motion.div
             className="modal-overlay"
@@ -396,6 +549,32 @@ function App() {
       </AnimatePresence>
 
       <Navbar />
+
+      <AnimatePresence>
+        {showKaraoke && (
+          <motion.div
+            className="modal-overlay"
+            onClick={() => setShowKaraoke(false)}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="modal-card"
+              onClick={(e) => e.stopPropagation()}
+              initial={{ y: 24, opacity: 0, scale: 0.96 }}
+              animate={{ y: 0, opacity: 1, scale: 1 }}
+              exit={{ y: 18, opacity: 0, scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 260, damping: 22 }}
+            >
+              <KaraokeGame
+                onClose={() => setShowKaraoke(false)}
+                autoStart
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </main>
   );
 }
