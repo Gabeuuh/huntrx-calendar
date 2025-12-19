@@ -31,8 +31,8 @@ const normalize = (text) =>
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9\s]/g, " ")
-    .replace(/\s+/g, " ")
+    .replace(/[^a-z0-9\\s]/g, " ")
+    .replace(/\\s+/g, " ")
     .trim();
 
 const computeScore = (expected, actual) => {
@@ -61,26 +61,41 @@ export function KaraokeGame({ onClose, onWin, autoStart = false }) {
   const [error, setError] = useState("");
   const [remaining, setRemaining] = useState(0);
   const [showEnd, setShowEnd] = useState(false);
+  const [isSongPlaying, setIsSongPlaying] = useState(false);
   const hasAwardedRef = useRef(false);
 
   useEffect(() => {
-    // Prépare l'audio
-    const audio = new Audio(karaokeSong);
-    audio.loop = true;
-    audioRef.current = audio;
-
     if (autoStart) {
       startCountdownOnly();
     }
     return () => {
       if (recognitionRef.current) recognitionRef.current.stop();
       if (countdownRef.current) clearInterval(countdownRef.current);
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
+      if (audioRef.current) audioRef.current.pause();
+      hasAwardedRef.current = false;
+      setIsSongPlaying(false);
     };
   }, []);
+
+  const playSong = () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    try {
+      if (isSongPlaying) {
+        audio.pause();
+        setIsSongPlaying(false);
+        return;
+      }
+      if (audio.readyState === 0) audio.load();
+      audio.currentTime = 0;
+      audio
+        .play()
+        .then(() => setIsSongPlaying(true))
+        .catch(() => setError("Active le son pour entendre la musique."));
+    } catch {
+      /* ignore */
+    }
+  };
 
   const startListening = () => {
     const SpeechRecognition =
@@ -126,6 +141,10 @@ export function KaraokeGame({ onClose, onWin, autoStart = false }) {
 
     recog.onend = () => {
       setStatus((prev) => (prev === "listening" ? "stopped" : prev));
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      setIsSongPlaying(false);
     };
 
     setTranscript("");
@@ -133,8 +152,7 @@ export function KaraokeGame({ onClose, onWin, autoStart = false }) {
     setStatus("listening");
     recog.start();
     if (audioRef.current) {
-      audioRef.current.currentTime = 0;
-      audioRef.current.play().catch(() => {});
+      playSong();
     }
   };
 
@@ -143,7 +161,12 @@ export function KaraokeGame({ onClose, onWin, autoStart = false }) {
     setStatus("countdown");
     if (countdownRef.current) clearInterval(countdownRef.current);
     countdownRef.current = setInterval(() => {
-      setRemaining((r) => (r <= 1 ? 0 : r - 1));
+      setRemaining((r) => {
+        if (r <= 1) {
+          return 0; // reste affiché à 0
+        }
+        return r - 1;
+      });
     }, 1000);
   };
 
@@ -159,11 +182,20 @@ export function KaraokeGame({ onClose, onWin, autoStart = false }) {
     if (audioRef.current) {
       audioRef.current.pause();
     }
+    setIsSongPlaying(false);
   };
 
   return (
     <div className="karaoke-overlay" onClick={onClose}>
       <div className="karaoke-panel evil" onClick={(e) => e.stopPropagation()}>
+        <audio
+          ref={audioRef}
+          src={`${karaokeSong}?v=1`}
+          preload="auto"
+          loop
+          style={{ display: "none" }}
+        />
+
         <button className="karaoke-close" onClick={onClose} aria-label="Fermer">
           <img src={closeIcon} alt="Fermer" />
         </button>
@@ -188,6 +220,9 @@ export function KaraokeGame({ onClose, onWin, autoStart = false }) {
               Arrêter
             </button>
           )}
+          <button className="karaoke-btn ghost" onClick={playSong}>
+            Écouter la musique
+          </button>
         </div>
 
         {status !== "idle" && remaining >= 0 && (
