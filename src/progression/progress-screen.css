@@ -1,0 +1,55 @@
+.prog-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.35);
+  box-sizing: border-box;
+}
+
+.prog-panel {
+  position: relative;
+  width: min(480px, 96vw);
+  height: 92vh;
+  max-height: 900px;
+  background-size: cover;
+  background-position: center;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.25);
+}
+
+.prog-circle {
+  position: absolute;
+  right: -85%;
+  top: 15%;
+  width: 150%;
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.35), transparent 65%);
+  border: #fff 20px solid;
+}
+
+.prog-fill {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  background: linear-gradient(180deg, #6ba1ff 0%, #a04df0 60%, #d641b5 100%);
+  transition: height 600ms ease;
+}
+
+.prog-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 18px;
+  cursor: pointer;
+}

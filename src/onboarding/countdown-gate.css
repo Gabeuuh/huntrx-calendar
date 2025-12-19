@@ -1,0 +1,56 @@
+.cg-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.35);
+  box-sizing: border-box;
+}
+
+.cg-panel {
+  position: relative;
+  width: min(500px, 100vw);
+  height: 100vh;
+  max-height: 100vh;
+  border-radius: 18px;
+  overflow: hidden;
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.25);
+  transition: transform 420ms ease, opacity 420ms ease;
+}
+
+.cg-layer {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  gap: 18px;
+  text-align: center;
+}
+
+.cg-coming,
+.cg-timer {
+  font-family: "Antique Olive Std Roman", "Antique Olive Std Bold", sans-serif;
+  color: #f5e7c3;
+  text-shadow: 0 3px 6px rgba(0, 0, 0, 0.45);
+  letter-spacing: 1px;
+}
+
+.cg-coming {
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.cg-timer {
+  font-size: 40px;
+  font-weight: 600;
+  position: relative;
+  top: -100px
+}
+
+.cg-show-start {
+  transform: scale(1.01);
+  opacity: 1;
+}

@@ -3,14 +3,15 @@ import "./karaoke.css";
 import closeIcon from "../assets/close.svg";
 import endScreenImg from "../assets/monde1/karaoke/endScreen-karaoke.png";
 import RewardButton from "../reward/RewardButton";
+import karaokeSong from "../assets/monde1/karaoke/chanson-briller-karaoke.mp3";
 
 const LYRICS = `On vise le top-op-op
 C'est notre moment
 Rien ne pourra nous arrêter
 On est venues là pour briller
 Oh, top-op-op
-On va de l'avant
-Ensemble, on peut se dépasser
+C'est notre moment
+Rien ne pourra nous arrêter
 On est venues là pour briller`;
 
 // Masquage façon "N'oubliez pas les paroles"
@@ -20,8 +21,8 @@ const MASKED_LYRICS = [
   "Rien ne pourra nous ______",
   "On est venues là pour ______",
   "Oh, ___-___-___",
-  "On va de l'_____",
-  "Ensemble, on peut se ________",
+  "C'est notre ______",
+  "Rien ne pourra nous ______",
   "On est venues là pour ______",
 ];
 
@@ -50,23 +51,34 @@ const computeScore = (expected, actual) => {
   return Math.min(100, Math.round((matches / expWords.length) * 100));
 };
 
-export function KaraokeGame({ onClose, autoStart = false }) {
+export function KaraokeGame({ onClose, onWin, autoStart = false }) {
   const recognitionRef = useRef(null);
   const countdownRef = useRef(null);
+  const audioRef = useRef(null);
   const [status, setStatus] = useState("idle"); // idle | countdown | listening | stopped | error
   const [transcript, setTranscript] = useState("");
   const [score, setScore] = useState(null);
   const [error, setError] = useState("");
   const [remaining, setRemaining] = useState(0);
   const [showEnd, setShowEnd] = useState(false);
+  const hasAwardedRef = useRef(false);
 
   useEffect(() => {
+    // Prépare l'audio
+    const audio = new Audio(karaokeSong);
+    audio.loop = true;
+    audioRef.current = audio;
+
     if (autoStart) {
       startCountdownOnly();
     }
     return () => {
       if (recognitionRef.current) recognitionRef.current.stop();
       if (countdownRef.current) clearInterval(countdownRef.current);
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
     };
   }, []);
 
@@ -98,6 +110,10 @@ export function KaraokeGame({ onClose, autoStart = false }) {
         const computed = computeScore(LYRICS, full);
         setScore(computed);
         if (computed >= 80) {
+          if (!hasAwardedRef.current) {
+            hasAwardedRef.current = true;
+            onWin && onWin();
+          }
           setShowEnd(true);
         }
       }
@@ -116,6 +132,10 @@ export function KaraokeGame({ onClose, autoStart = false }) {
     setScore(null);
     setStatus("listening");
     recog.start();
+    if (audioRef.current) {
+      audioRef.current.currentTime = 0;
+      audioRef.current.play().catch(() => {});
+    }
   };
 
   const startCountdownOnly = () => {
@@ -136,14 +156,14 @@ export function KaraokeGame({ onClose, autoStart = false }) {
       clearInterval(countdownRef.current);
       countdownRef.current = null;
     }
+    if (audioRef.current) {
+      audioRef.current.pause();
+    }
   };
 
   return (
     <div className="karaoke-overlay" onClick={onClose}>
-      <div
-        className="karaoke-panel evil"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="karaoke-panel evil" onClick={(e) => e.stopPropagation()}>
         <button className="karaoke-close" onClick={onClose} aria-label="Fermer">
           <img src={closeIcon} alt="Fermer" />
         </button>
@@ -172,7 +192,8 @@ export function KaraokeGame({ onClose, autoStart = false }) {
 
         {status !== "idle" && remaining >= 0 && (
           <div className="karaoke-countdown">
-            Plus que {remaining} seconde{remaining > 1 ? "s" : ""} pour s'enregistrer
+            Plus que {remaining} seconde{remaining > 1 ? "s" : ""} pour
+            s'enregistrer
           </div>
         )}
 

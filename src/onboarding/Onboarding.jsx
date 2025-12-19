@@ -57,7 +57,7 @@ export function Onboarding({ onDone }) {
                   style={{ "--fan-angle": `${fanAngles[idx] || 0}deg` }}
                   onClick={() => setAvatar(item.id)}
                 >
-                  <img src={item.img} alt={item.id} />
+                  <img src={item.img} alt={item.id} loading="lazy" />
                 </button>
               ))}
             </div>

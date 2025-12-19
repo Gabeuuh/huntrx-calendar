@@ -8,7 +8,7 @@ import RewardButton from "../reward/RewardButton";
 const RECORD_DURATION_MS = 10000;
 const WEBHOOK_URL = "https://apizee.app.n8n.cloud/webhook/getScoreDance";
 
-export function JustDanceGame({ referenceVideoUrl, onClose }) {
+export function JustDanceGame({ referenceVideoUrl, onClose, onWin }) {
   const liveVideoRef = useRef(null);
   const referenceVideoRef = useRef(null);
   const recorderRef = useRef(null);
@@ -21,6 +21,7 @@ export function JustDanceGame({ referenceVideoUrl, onClose }) {
   const [recordedUrl, setRecordedUrl] = useState("");
   const [score, setScore] = useState(null);
   const [scoreStatus, setScoreStatus] = useState("idle"); // idle | requesting | done
+  const hasAwardedRef = useRef(false);
 
   const isWinner = scoreStatus === "done" && score != null && score > 50;
 
@@ -48,8 +49,16 @@ export function JustDanceGame({ referenceVideoUrl, onClose }) {
       if (recordedUrl) URL.revokeObjectURL(recordedUrl);
       setScore(null);
       setScoreStatus("idle");
+      hasAwardedRef.current = false;
     };
   }, [recordedUrl]);
+
+  useEffect(() => {
+    if (isWinner && !hasAwardedRef.current) {
+      hasAwardedRef.current = true;
+      onWin && onWin();
+    }
+  }, [isWinner, onWin]);
 
   const startCamera = async () => {
     try {

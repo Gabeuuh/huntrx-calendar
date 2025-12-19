@@ -12,8 +12,9 @@ const tabs = [
   { id: "chat", icon: chatIcon, label: "Chat" },
 ];
 
-export function Navbar() {
+export function Navbar({ onCenterClick, xpPercent = 0 }) {
   const [active, setActive] = useState("forest");
+  const fill = Math.min(100, Math.max(0, xpPercent));
 
   return (
     <nav className="nav-shell">
@@ -29,10 +30,19 @@ export function Navbar() {
         </button>
       ))}
 
-      <div className="nav-center">
+      <button
+        className="nav-center"
+        type="button"
+        onClick={onCenterClick}
+        aria-label="Ouvrir la jauge"
+      >
         <div className="nav-center-glow" />
-        <div className="nav-center-half" />
-      </div>
+        <div
+          className="nav-center-fill"
+          style={{ "--center-fill": `${fill}%` }}
+          aria-hidden="true"
+        />
+      </button>
 
       {tabs.slice(2).map((tab) => (
         <button

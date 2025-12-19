@@ -43,6 +43,8 @@ import refVideo from "./assets/monde1/danse/danse-just-dance.mp4";
 import { Navbar } from "./navbar/Navbar";
 import { AnimatePresence, motion } from "framer-motion";
 import { Onboarding } from "./onboarding/Onboarding";
+import { CountdownGate } from "./onboarding/CountdownGate";
+import { ProgressScreen } from "./progression/ProgressScreen";
 import "./App.css";
 
 const BOARD_WIDTH = 440;
@@ -183,7 +185,13 @@ function App() {
   const [showKaraoke, setShowKaraoke] = useState(false);
   const [seg2Height, setSeg2Height] = useState(0);
   const [seg3Height, setSeg3Height] = useState(0);
-  const [showOnboarding, setShowOnboarding] = useState(true);
+  const [showGate, setShowGate] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showProgress, setShowProgress] = useState(false);
+  const [xp, setXp] = useState(0);
+  const [hasDanceXp, setHasDanceXp] = useState(false);
+  const [hasKaraokeXp, setHasKaraokeXp] = useState(false);
+  const [hasRecipesXp, setHasRecipesXp] = useState(false);
 
   useEffect(() => {
     hydrateCurrentDayFromQuery();
@@ -286,6 +294,18 @@ function App() {
       behavior: "auto",
     });
   }, [currentDay, layout.scale, segmentOffsetsTop]);
+
+  const awardXp = (amount, flagSetter) => {
+    flagSetter((flag) => {
+      if (flag) return true;
+      setXp((v) => Math.min(100, v + amount));
+      return true;
+    });
+  };
+
+  const handleDanceWin = () => awardXp(20, setHasDanceXp);
+  const handleKaraokeWin = () => awardXp(50, setHasKaraokeXp);
+  const handleRecipesWin = () => awardXp(30, setHasRecipesXp);
 
   useEffect(() => {
     const container = scrollRef.current;
@@ -425,6 +445,7 @@ function App() {
                   <img
                     className="slot-image"
                     src={dayImages[slot.number][state]}
+                    loading="lazy"
                     alt={`Jour ${slot.number}`}
                   />
                 </div>
@@ -520,6 +541,7 @@ function App() {
               <JustDanceGame
                 referenceVideoUrl={refVideo}
                 onClose={() => setShowGame(false)}
+                onWin={handleDanceWin}
               />
             </motion.div>
           </motion.div>
@@ -559,7 +581,12 @@ function App() {
         {showReward3 && (
           <motion.div
             className="modal-overlay"
-            onClick={() => setShowReward3(false)}
+            onClick={() => {
+              if (!hasRecipesXp) {
+                handleRecipesWin();
+              }
+              setShowReward3(false);
+            }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -572,7 +599,12 @@ function App() {
             >
               <RewardScreens
                 index={rewardIndex}
-                onClose={() => setShowReward3(false)}
+                onClose={() => {
+                  if (!hasRecipesXp) {
+                    handleRecipesWin();
+                  }
+                  setShowReward3(false);
+                }}
                 onPrev={() =>
                   setRewardIndex((idx) => Math.max(0, idx - 1))
                 }
@@ -587,7 +619,26 @@ function App() {
         )}
       </AnimatePresence>
 
-      <Navbar />
+      <Navbar
+        onCenterClick={() => setShowProgress(true)}
+        xpPercent={xp}
+      />
+
+      <AnimatePresence>
+        {showProgress && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <ProgressScreen
+              xp={xp}
+              onClose={() => setShowProgress(false)}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {showKaraoke && (
@@ -608,6 +659,7 @@ function App() {
             >
               <KaraokeGame
                 onClose={() => setShowKaraoke(false)}
+                onWin={handleKaraokeWin}
                 autoStart
               />
             </motion.div>
@@ -615,6 +667,14 @@ function App() {
         )}
       </AnimatePresence>
 
+      {showGate && (
+        <CountdownGate
+          onDone={() => {
+            setShowGate(false);
+            setShowOnboarding(true);
+          }}
+        />
+      )}
       {showOnboarding && <Onboarding onDone={() => setShowOnboarding(false)} />}
     </main>
   );
