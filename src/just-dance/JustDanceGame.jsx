@@ -23,7 +23,7 @@ export function JustDanceGame({ referenceVideoUrl, onClose, onWin }) {
   const [scoreStatus, setScoreStatus] = useState("idle"); // idle | requesting | done
   const hasAwardedRef = useRef(false);
 
-  const isWinner = scoreStatus === "done" && score != null && score > 50;
+  const isWinner = scoreStatus === "done" && score != null;
 
   const clearTimer = () => {
     if (timerRef.current) {
